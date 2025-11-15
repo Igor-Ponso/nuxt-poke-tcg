@@ -44,7 +44,7 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
-    typeCheck: false, // Disabled for now - will enable when we have actual code
+    typeCheck: true, // ✅ Enabled for production-ready code
     shim: false,
   },
 
@@ -75,13 +75,6 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '@use "~/assets/css/_variables.scss" as *;',
-        },
-      },
-    },
     vue: {
       template: {
         compilerOptions: {
@@ -92,12 +85,11 @@ export default defineNuxtConfig({
   },
 
   imports: {
-    // Only auto-import from composables to prevent utils duplicates
-    dirs: ['composables/**'],
-    // Explicitly disable utils scanning
-    scan: true,
+    // Auto-import nested composables for better organization
+    dirs: [
+      'composables',         // Top-level composables
+      'composables/*/index.ts', // Barrel exports
+      'composables/**',      // All nested composables (core/, pokemon/, tcg/, effects/)
+    ],
   },
-
-  // Explicitly ignore utils directory from auto-scanning
-  ignore: ['utils/**/*.ts', '!utils/index.ts'],
 })

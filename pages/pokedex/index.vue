@@ -5,6 +5,8 @@
  * Browse and search all Pokémon with filters
  */
 
+import type { SimplifiedPokemon } from '~/types'
+
 useHead({
   title: 'Pokédex - PokéTCG',
   meta: [{ name: 'description', content: 'Browse all Pokémon from Generation I to IX' }],
@@ -12,6 +14,8 @@ useHead({
 
 const pokemonStore = usePokemonStore()
 const route = useRoute()
+const selectedPokemon = ref<SimplifiedPokemon | null>(null)
+const showPokemonModal = ref(false)
 
 // Initialize store
 onMounted(async () => {
@@ -29,6 +33,24 @@ onMounted(async () => {
 async function loadMore() {
   if (!pokemonStore.hasMore || pokemonStore.loading) return
   await pokemonStore.fetchPokemons(pokemonStore.currentPage + 1)
+}
+
+/**
+ * Handle Pokemon card click
+ */
+function handlePokemonClick(pokemon: SimplifiedPokemon) {
+  selectedPokemon.value = pokemon
+  showPokemonModal.value = true
+}
+
+/**
+ * Close modal
+ */
+function closeModal() {
+  showPokemonModal.value = false
+  setTimeout(() => {
+    selectedPokemon.value = null
+  }, 300)
 }
 </script>
 
@@ -61,7 +83,7 @@ async function loadMore() {
           :pokemon="pokemon"
           size="md"
           :favorited="pokemonStore.isFavorite(pokemon.id)"
-          @click="navigateTo(`/pokedex/${pokemon.id}`)"
+          @click="handlePokemonClick(pokemon)"
           @favorite="pokemonStore.toggleFavorite(pokemon)"
         />
       </div>
@@ -78,5 +100,12 @@ async function loadMore() {
         </UiButton>
       </div>
     </div>
+
+    <!-- Pokemon Detail Modal -->
+    <PokemonModal
+      :pokemon="selectedPokemon"
+      :show="showPokemonModal"
+      @close="closeModal"
+    />
   </div>
 </template>

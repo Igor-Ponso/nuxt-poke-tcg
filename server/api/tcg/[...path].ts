@@ -61,20 +61,15 @@ export default defineEventHandler(async (event) => {
 
   const url = `https://api.pokemontcg.io/v2/${path}`
 
-  console.log('[TCG API Proxy] Request:', { url, params: query })
-
   try {
     const headers: Record<string, string> = {}
 
     // Only add API key if it's configured
     if (config.public.pokemonTcgApiKey && config.public.pokemonTcgApiKey !== 'your_api_key_here') {
       headers['X-Api-Key'] = config.public.pokemonTcgApiKey as string
-      console.log('[TCG API Proxy] Using API key')
     }
 
     const data = await fetchWithRetry(url, headers, query)
-
-    console.log('[TCG API Proxy] Success')
     return data
   }
   catch (error: any) {

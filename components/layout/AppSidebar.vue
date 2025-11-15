@@ -80,10 +80,10 @@ function clearFilters() {
 
 <template>
   <aside
-    class="hidden lg:block relative w-64 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border-r border-gray-200 dark:border-gray-700 transition-all duration-300"
+    class="hidden lg:block w-64 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex-shrink-0"
     :class="{ 'lg:w-16': !isOpen }"
   >
-    <div class="sticky top-20 p-4 space-y-6">
+    <div class="sticky top-4 p-4 space-y-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
       <!-- Toggle Button -->
       <button
         type="button"

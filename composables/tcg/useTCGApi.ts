@@ -22,9 +22,12 @@ export function useTCGApi() {
    * Fetches a single card by ID
    */
   async function fetchCard(id: string): Promise<TCGCard> {
-    const cacheKey = `tcg_card_${id}`
-    const cached = getFromCache<TCGCard>(cacheKey)
+    const cache = useCache<TCGCard>(`tcg_card_${id}`, {
+      ttl: 24 * 60 * 60 * 1000, // 24 hours
+      prefix: 'tcgapi',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
@@ -32,7 +35,7 @@ export function useTCGApi() {
     const url = `${baseUrl}/cards/${id}`
     const response = await $fetch<{ data: TCGCard }>(url)
 
-    saveToCache(cacheKey, response.data)
+    cache.set(response.data)
     return response.data
   }
 
@@ -61,9 +64,12 @@ export function useTCGApi() {
    * Fetches all sets
    */
   async function fetchSets(): Promise<TCGSet[]> {
-    const cacheKey = 'tcg_sets'
-    const cached = getFromCache<TCGSet[]>(cacheKey)
+    const cache = useCache<TCGSet[]>('tcg_sets', {
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days (sets don't change often)
+      prefix: 'tcgapi',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
@@ -71,7 +77,7 @@ export function useTCGApi() {
     const url = `${baseUrl}/sets`
     const response = await $fetch<TCGSetsResponse>(url)
 
-    saveToCache(cacheKey, response.data)
+    cache.set(response.data)
     return response.data
   }
 
@@ -79,9 +85,12 @@ export function useTCGApi() {
    * Fetches a single set by ID
    */
   async function fetchSet(id: string): Promise<TCGSet> {
-    const cacheKey = `tcg_set_${id}`
-    const cached = getFromCache<TCGSet>(cacheKey)
+    const cache = useCache<TCGSet>(`tcg_set_${id}`, {
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
+      prefix: 'tcgapi',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
@@ -89,7 +98,7 @@ export function useTCGApi() {
     const url = `${baseUrl}/sets/${id}`
     const response = await $fetch<{ data: TCGSet }>(url)
 
-    saveToCache(cacheKey, response.data)
+    cache.set(response.data)
     return response.data
   }
 
@@ -123,10 +132,10 @@ export function useTCGApi() {
       id: card.id,
       name: card.name,
       imageUrl: card.images.large,
-      rarity: card.rarity,
+      rarity: card.rarity || 'Common',
       setName: card.set.name,
       number: card.number,
-      types: card.types,
+      types: card.types || ['Colorless'],
     }
   }
 
@@ -249,46 +258,3 @@ function buildQueryParams(params: TCGCardQueryParams): string {
   return queryParts.join('&')
 }
 
-// ============================================================================
-// CACHE HELPERS
-// ============================================================================
-
-function getFromCache<T>(key: string): T | null {
-  if (import.meta.client) {
-    try {
-      const cached = localStorage.getItem(key)
-      if (!cached) return null
-
-      const { data, timestamp } = JSON.parse(cached)
-      const age = Date.now() - timestamp
-
-      // Cache for 24 hours
-      if (age < 24 * 60 * 60 * 1000) {
-        return data as T
-      }
-
-      // Expired, remove from cache
-      localStorage.removeItem(key)
-    }
-    catch (error) {
-      console.warn('Cache read error:', error)
-    }
-  }
-
-  return null
-}
-
-function saveToCache<T>(key: string, data: T): void {
-  if (import.meta.client) {
-    try {
-      const cacheData = {
-        data,
-        timestamp: Date.now(),
-      }
-      localStorage.setItem(key, JSON.stringify(cacheData))
-    }
-    catch (error) {
-      console.warn('Cache write error:', error)
-    }
-  }
-}

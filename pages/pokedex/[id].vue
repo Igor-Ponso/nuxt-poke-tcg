@@ -173,13 +173,20 @@ function toggleShiny() {
 
         <!-- 3D Model View -->
         <div v-else class="min-h-[400px]">
-          <Pokemon3DViewer
-            :pokemon-id="pokemon.id"
-            :pokemon-name="pokemon.name"
-            :form="showShiny ? 'shiny' : 'regular'"
-            height="400px"
-            :show-form-toggle="false"
-          />
+          <ClientOnly>
+            <Pokemon3DViewer
+              :pokemon-id="pokemon.id"
+              :pokemon-name="pokemon.name"
+              :form="showShiny ? 'shiny' : 'regular'"
+              height="400px"
+              :show-form-toggle="false"
+            />
+            <template #fallback>
+              <div class="flex items-center justify-center h-[400px] text-gray-500">
+                <Icon icon="ph:circle-notch" class="w-8 h-8 animate-spin" />
+              </div>
+            </template>
+          </ClientOnly>
         </div>
       </UiCard>
 

@@ -6,8 +6,12 @@
  * Supports rotation, zoom, and form switching (regular/shiny)
  */
 
-import '@google/model-viewer'
 import { Icon } from '@iconify/vue'
+
+// Dynamic import to avoid SSR issues
+if (import.meta.client) {
+  import('@google/model-viewer')
+}
 
 export interface Pokemon3DViewerProps {
   pokemonId: number
@@ -18,6 +22,7 @@ export interface Pokemon3DViewerProps {
   height?: string
   backgroundColor?: string
   showFormToggle?: boolean
+  autoplayAnimation?: boolean
 }
 
 const props = withDefaults(defineProps<Pokemon3DViewerProps>(), {
@@ -27,6 +32,7 @@ const props = withDefaults(defineProps<Pokemon3DViewerProps>(), {
   height: '400px',
   backgroundColor: 'transparent',
   showFormToggle: true,
+  autoplayAnimation: true,
 })
 
 const emit = defineEmits<{
@@ -40,6 +46,8 @@ const currentForm = ref(props.form)
 const isLoading = ref(true)
 const hasError = ref(false)
 const errorMessage = ref('')
+const modelViewerRef = ref<any>(null)
+const cameraOrbit = ref('0deg 75deg 2.5m')
 
 /**
  * Computed model URL based on current form
@@ -61,9 +69,43 @@ function toggleForm() {
 /**
  * Handle model load event
  */
-function handleLoad() {
+function handleLoad(event: Event) {
   isLoading.value = false
   hasError.value = false
+
+  if (modelViewerRef.value) {
+    const modelViewer = modelViewerRef.value
+
+    // Wait for model to be ready
+    nextTick(() => {
+      // Auto-frame the model to fit nicely in view
+      if (modelViewer.getDimensions) {
+        const dimensions = modelViewer.getDimensions()
+        const maxDimension = Math.max(dimensions.x, dimensions.y, dimensions.z)
+
+        // Calculate optimal distance based on model size
+        // Larger models need more distance
+        const distance = maxDimension * 2.5
+        const clampedDistance = Math.max(1.5, Math.min(distance, 8)) // Between 1.5m and 8m
+
+        cameraOrbit.value = `0deg 75deg ${clampedDistance}m`
+
+        // Update camera orbit
+        modelViewer.cameraOrbit = cameraOrbit.value
+        modelViewer.fieldOfView = '30deg'
+      }
+
+      // Play animation if available and autoplay is enabled
+      if (props.autoplayAnimation) {
+        if (modelViewer.availableAnimations && modelViewer.availableAnimations.length > 0) {
+          modelViewer.autoplay = true
+          modelViewer.animationName = modelViewer.availableAnimations[0]
+          modelViewer.play()
+        }
+      }
+    })
+  }
+
   emit('loaded')
 }
 
@@ -114,23 +156,25 @@ watch(() => props.pokemonId, () => {
 
     <!-- Model Viewer -->
     <model-viewer
+      ref="modelViewerRef"
       :src="modelUrl"
       :alt="`${pokemonName} 3D model`"
       :auto-rotate="autoRotate"
       :camera-controls="cameraControls"
+      :camera-orbit="cameraOrbit"
       :style="{
         width: '100%',
         height: height,
         backgroundColor: backgroundColor,
       }"
       class="rounded-2xl overflow-hidden"
-      camera-orbit="0deg 75deg 2.5m"
       field-of-view="30deg"
-      min-camera-orbit="auto auto 1m"
-      max-camera-orbit="auto auto 5m"
+      min-camera-orbit="auto auto 0.5m"
+      max-camera-orbit="auto auto 10m"
       shadow-intensity="1"
       exposure="1"
       tone-mapping="neutral"
+      autoplay
       @load="handleLoad"
       @error="handleError"
     >

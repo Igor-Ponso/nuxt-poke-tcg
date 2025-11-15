@@ -22,9 +22,12 @@ export function usePokemonApi() {
    * Fetches a Pokemon by ID or name
    */
   async function fetchPokemon(idOrName: string | number): Promise<Pokemon> {
-    const cacheKey = `pokemon_${idOrName}`
-    const cached = getFromCache<Pokemon>(cacheKey)
+    const cache = useCache<Pokemon>(`pokemon_${idOrName}`, {
+      ttl: 24 * 60 * 60 * 1000, // 24 hours
+      prefix: 'pokeapi',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
@@ -32,7 +35,7 @@ export function usePokemonApi() {
     const url = `${baseUrl}/pokemon/${idOrName}`
     const data = await $fetch<Pokemon>(url)
 
-    saveToCache(cacheKey, data)
+    cache.set(data)
     return data
   }
 
@@ -40,9 +43,12 @@ export function usePokemonApi() {
    * Fetches Pokemon species data (for descriptions, evolution, etc.)
    */
   async function fetchSpecies(idOrName: string | number): Promise<PokemonSpecies> {
-    const cacheKey = `species_${idOrName}`
-    const cached = getFromCache<PokemonSpecies>(cacheKey)
+    const cache = useCache<PokemonSpecies>(`species_${idOrName}`, {
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days (species data rarely changes)
+      prefix: 'pokeapi',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
@@ -50,7 +56,7 @@ export function usePokemonApi() {
     const url = `${baseUrl}/pokemon-species/${idOrName}`
     const data = await $fetch<PokemonSpecies>(url)
 
-    saveToCache(cacheKey, data)
+    cache.set(data)
     return data
   }
 
@@ -58,9 +64,12 @@ export function usePokemonApi() {
    * Fetches evolution chain
    */
   async function fetchEvolutionChain(id: number): Promise<EvolutionChain> {
-    const cacheKey = `evolution_${id}`
-    const cached = getFromCache<EvolutionChain>(cacheKey)
+    const cache = useCache<EvolutionChain>(`evolution_${id}`, {
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
+      prefix: 'pokeapi',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
@@ -68,7 +77,7 @@ export function usePokemonApi() {
     const url = `${baseUrl}/evolution-chain/${id}`
     const data = await $fetch<EvolutionChain>(url)
 
-    saveToCache(cacheKey, data)
+    cache.set(data)
     return data
   }
 
@@ -194,45 +203,5 @@ export function usePokemonApi() {
 }
 
 // ============================================================================
-// CACHE HELPERS
+// HELPER FUNCTIONS
 // ============================================================================
-
-function getFromCache<T>(key: string): T | null {
-  if (import.meta.client) {
-    try {
-      const cached = localStorage.getItem(key)
-      if (!cached) return null
-
-      const { data, timestamp } = JSON.parse(cached)
-      const age = Date.now() - timestamp
-
-      // Cache for 24 hours
-      if (age < 24 * 60 * 60 * 1000) {
-        return data as T
-      }
-
-      // Expired, remove from cache
-      localStorage.removeItem(key)
-    }
-    catch (error) {
-      console.warn('Cache read error:', error)
-    }
-  }
-
-  return null
-}
-
-function saveToCache<T>(key: string, data: T): void {
-  if (import.meta.client) {
-    try {
-      const cacheData = {
-        data,
-        timestamp: Date.now(),
-      }
-      localStorage.setItem(key, JSON.stringify(cacheData))
-    }
-    catch (error) {
-      console.warn('Cache write error:', error)
-    }
-  }
-}

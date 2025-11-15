@@ -28,15 +28,18 @@ export function usePokemon3D() {
    * Fetches all Pokemon 3D data from API
    */
   async function fetchAllPokemon3D(): Promise<Pokemon3DResponse> {
-    const cacheKey = 'pokemon_3d_all'
-    const cached = getFromCache<Pokemon3DResponse>(cacheKey)
+    const cache = useCache<Pokemon3DResponse>('pokemon_3d_all', {
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days (3D data changes rarely)
+      prefix: 'pokemon3d',
+    })
 
+    const cached = cache.get()
     if (cached) {
       return cached
     }
 
     const response = await $fetch<Pokemon3DResponse>(`${BASE_URL}/pokemon`)
-    saveToCache(cacheKey, response)
+    cache.set(response)
     return response
   }
 
@@ -101,45 +104,3 @@ export function usePokemon3D() {
   }
 }
 
-// ============================================================================
-// CACHE HELPERS
-// ============================================================================
-
-function getFromCache<T>(key: string): T | null {
-  if (import.meta.client) {
-    try {
-      const cached = localStorage.getItem(key)
-      if (!cached) return null
-
-      const { data, timestamp } = JSON.parse(cached)
-      const age = Date.now() - timestamp
-
-      // Cache for 7 days (3D data changes rarely)
-      if (age < 7 * 24 * 60 * 60 * 1000) {
-        return data as T
-      }
-
-      localStorage.removeItem(key)
-    }
-    catch (error) {
-      console.warn('Cache read error:', error)
-    }
-  }
-
-  return null
-}
-
-function saveToCache<T>(key: string, data: T): void {
-  if (import.meta.client) {
-    try {
-      const cacheData = {
-        data,
-        timestamp: Date.now(),
-      }
-      localStorage.setItem(key, JSON.stringify(cacheData))
-    }
-    catch (error) {
-      console.warn('Cache write error:', error)
-    }
-  }
-}

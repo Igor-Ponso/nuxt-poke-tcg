@@ -38,6 +38,8 @@ const emit = defineEmits<{
   shinyToggle: [isShiny: boolean]
 }>()
 
+const audioRef = ref<HTMLAudioElement | null>(null)
+
 const cardRef = ref<HTMLElement | null>(null)
 
 /**
@@ -174,6 +176,17 @@ function handleShinyToggle(event: Event) {
   shinyMode.value = !shinyMode.value
   emit('shinyToggle', shinyMode.value)
 }
+
+/**
+ * Play Pokemon cry
+ */
+function playCry(event: Event) {
+  event.stopPropagation()
+  if (audioRef.value) {
+    audioRef.value.currentTime = 0
+    audioRef.value.play()
+  }
+}
 </script>
 
 <template>
@@ -220,6 +233,16 @@ function handleShinyToggle(event: Event) {
 
         <!-- Action buttons -->
         <div class="flex items-center gap-2">
+          <!-- Cry button -->
+          <button
+            class="p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
+            type="button"
+            aria-label="Play cry"
+            @click="playCry"
+          >
+            <Icon icon="ph:speaker-high-bold" class="w-5 h-5" />
+          </button>
+
           <!-- Shiny button -->
           <button
             v-if="showShiny && pokemon.shinySprite"
@@ -245,6 +268,13 @@ function handleShinyToggle(event: Event) {
         </div>
       </div>
 
+      <!-- Hidden audio element for cry -->
+      <audio
+        ref="audioRef"
+        :src="`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${pokemon.id}.ogg`"
+        preload="none"
+      />
+
       <!-- Pokemon Image -->
       <div :class="imageClass" class="relative">
         <img
@@ -255,25 +285,52 @@ function handleShinyToggle(event: Event) {
           loading="lazy"
         >
         <!-- Shiny sparkle effect -->
-        <div
-          v-if="shinyMode"
-          class="absolute inset-0 pointer-events-none"
+        <Transition
+          enter-active-class="transition duration-500 ease-out"
+          enter-from-class="opacity-0 scale-0"
+          enter-to-class="opacity-100 scale-100"
         >
-          <Icon
-            icon="ph:sparkle-fill"
-            class="absolute top-0 right-0 w-6 h-6 text-yellow-300 animate-ping"
-          />
-          <Icon
-            icon="ph:sparkle-fill"
-            class="absolute bottom-4 left-4 w-4 h-4 text-yellow-300 animate-ping"
-            style="animation-delay: 0.3s"
-          />
-          <Icon
-            icon="ph:sparkle-fill"
-            class="absolute top-8 left-8 w-5 h-5 text-yellow-300 animate-ping"
-            style="animation-delay: 0.6s"
-          />
-        </div>
+          <div
+            v-if="shinyMode"
+            class="absolute inset-0 pointer-events-none"
+          >
+            <!-- Radial gradient glow -->
+            <div class="absolute inset-0 bg-gradient-radial from-yellow-300/30 via-yellow-400/20 to-transparent animate-pulse" />
+
+            <!-- Multiple sparkles with ping animation -->
+            <Icon
+              icon="ph:sparkle-fill"
+              class="absolute top-2 right-2 w-8 h-8 text-yellow-200 animate-ping drop-shadow-[0_0_8px_rgba(253,224,71,0.8)]"
+            />
+            <Icon
+              icon="ph:sparkle-fill"
+              class="absolute top-1/4 left-4 w-5 h-5 text-yellow-300 animate-ping drop-shadow-[0_0_6px_rgba(253,224,71,0.8)]"
+              style="animation-delay: 0.2s"
+            />
+            <Icon
+              icon="ph:sparkle-fill"
+              class="absolute top-1/2 right-8 w-6 h-6 text-yellow-200 animate-ping drop-shadow-[0_0_8px_rgba(253,224,71,0.8)]"
+              style="animation-delay: 0.4s"
+            />
+            <Icon
+              icon="ph:sparkle-fill"
+              class="absolute bottom-1/4 left-1/3 w-4 h-4 text-yellow-300 animate-ping drop-shadow-[0_0_6px_rgba(253,224,71,0.8)]"
+              style="animation-delay: 0.6s"
+            />
+            <Icon
+              icon="ph:sparkle-fill"
+              class="absolute bottom-4 right-1/4 w-7 h-7 text-yellow-200 animate-ping drop-shadow-[0_0_8px_rgba(253,224,71,0.8)]"
+              style="animation-delay: 0.8s"
+            />
+
+            <!-- Star with ping animation instead of spin -->
+            <Icon
+              icon="ph:star-fill"
+              class="absolute top-1/3 right-1/3 w-5 h-5 text-yellow-100 animate-ping drop-shadow-[0_0_10px_rgba(253,224,71,0.9)]"
+              style="animation-delay: 0.3s"
+            />
+          </div>
+        </Transition>
       </div>
 
       <!-- Pokemon Name -->
