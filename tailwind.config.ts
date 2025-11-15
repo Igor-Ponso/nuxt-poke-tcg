@@ -1,4 +1,15 @@
 import type { Config } from 'tailwindcss'
+import { TYPE_COLORS } from './utils/colors'
+
+// Generate Tailwind color config from TYPE_COLORS (single source of truth)
+const pokemonTypeColors = Object.entries(TYPE_COLORS).reduce(
+  (acc, [type, colors]) => {
+    acc[`poke-${type}`] = colors.light
+    acc[`poke-${type}-dark`] = colors.dark
+    return acc
+  },
+  {} as Record<string, string>,
+)
 
 export default <Partial<Config>>{
   content: [
@@ -12,45 +23,8 @@ export default <Partial<Config>>{
   theme: {
     extend: {
       colors: {
-        // Pokemon Types - Light (background)
-        'poke-normal': '#dcdcdc',
-        'poke-fire': '#ffb971',
-        'poke-water': '#8cc4e2',
-        'poke-electric': '#ffe662',
-        'poke-grass': '#78dd81',
-        'poke-ice': '#8cf5e4',
-        'poke-fighting': '#da7589',
-        'poke-poison': '#d881ef',
-        'poke-ground': '#e69a74',
-        'poke-flying': '#99ccff',
-        'poke-psychic': '#f57ec3',
-        'poke-bug': '#bfe760',
-        'poke-rock': '#c9bb8a',
-        'poke-ghost': '#8291e0',
-        'poke-dragon': '#88a2e8',
-        'poke-dark': '#8e8c94',
-        'poke-steel': '#9fb8b9',
-        'poke-fairy': '#fdb9e9',
-
-        // Pokemon Types - Dark (accent/badge)
-        'poke-normal-dark': '#a0a29f',
-        'poke-fire-dark': '#dc872f',
-        'poke-water-dark': '#539ddf',
-        'poke-electric-dark': '#d9b803',
-        'poke-grass-dark': '#59b153',
-        'poke-ice-dark': '#75d0c1',
-        'poke-fighting-dark': '#d3425f',
-        'poke-poison-dark': '#b763cf',
-        'poke-ground-dark': '#da7c4d',
-        'poke-flying-dark': '#80a0dd',
-        'poke-psychic-dark': '#db1d8c',
-        'poke-bug-dark': '#92bc2c',
-        'poke-rock-dark': '#a38c21',
-        'poke-ghost-dark': '#5f6dbc',
-        'poke-dragon-dark': '#0c69c8',
-        'poke-dark-dark': '#595761',
-        'poke-steel-dark': '#5695a3',
-        'poke-fairy-dark': '#ee90e6',
+        // Pokemon Types - Generated from utils/colors.ts (single source of truth)
+        ...pokemonTypeColors,
 
         // Generation Colors
         'gen-kanto': '#FF6B6B',
