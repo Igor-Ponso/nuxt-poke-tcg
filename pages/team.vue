@@ -5,6 +5,8 @@
  * View and manage your favorite Pokemon team (max 6)
  */
 
+import type { PokemonType } from '~/types'
+
 useHead({
   title: 'My Team - PokéTCG',
   meta: [{ name: 'description', content: 'View and manage your favorite Pokemon team' }],
@@ -53,7 +55,7 @@ const teamStats = computed(() => {
  * Get all unique types in team
  */
 const teamTypes = computed(() => {
-  const types = new Set<string>()
+  const types = new Set<PokemonType>()
   favorites.value.forEach((pokemon) => {
     pokemon.types.forEach(type => types.add(type))
   })

@@ -36,7 +36,7 @@ export function useHolographic(
     type: 'standard',
   }
 ) {
-  const { enabled, intensity = 1, speed = 1, type = 'standard' } = config
+  const { enabled, intensity = 1, type = 'standard' } = config
 
   // Mouse position (0-1 range)
   const mouseX = ref(0.5)

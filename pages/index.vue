@@ -17,7 +17,6 @@ useHead({
 
 const pokemonStore = usePokemonStore()
 const tcgStore = useTCGStore()
-const uiStore = useUIStore()
 
 // Initialize stores
 onMounted(async () => {

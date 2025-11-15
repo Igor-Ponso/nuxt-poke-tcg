@@ -7,7 +7,6 @@
  */
 
 import type { PokemonType } from '~/types'
-import { POKEMON_TYPES } from './constants'
 
 // ============================================================================
 // TYPE COLOR MAPPING

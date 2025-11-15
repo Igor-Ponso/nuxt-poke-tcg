@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import type { TCGRarity } from '~/types'
 
 const emit = defineEmits<{
-  filter: [filters: { rarity?: string; set?: string }]
+  filter: [filters: { rarity?: TCGRarity; set?: string }]
 }>()
 
 const selectedRarity = ref('')
@@ -25,7 +26,7 @@ const rarities = [
 
 function applyFilters() {
   emit('filter', {
-    rarity: selectedRarity.value || undefined,
+    rarity: (selectedRarity.value || undefined) as TCGRarity | undefined,
     set: selectedSet.value || undefined,
   })
   showFilters.value = false

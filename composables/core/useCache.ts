@@ -140,7 +140,7 @@ export function useCache<T>(key: string, config: CacheConfig = {}) {
       // Security: Sanitize data before stringifying
       // Remove any potential XSS vectors (script tags, event handlers)
       const sanitized = JSON.parse(
-        JSON.stringify(entry, (key, value) => {
+        JSON.stringify(entry, (_key, value) => {
           // Remove function values (potential code injection)
           if (typeof value === 'function') {
             return undefined

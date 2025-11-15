@@ -5,7 +5,7 @@
  */
 
 import { defineStore } from 'pinia'
-import type { TCGCard, TCGSet, SimplifiedTCGCard } from '~/types'
+import type { TCGCard, TCGSet, SimplifiedTCGCard, TCGRarity } from '~/types'
 
 interface TCGState {
   // Cards
@@ -207,7 +207,7 @@ export const useTCGStore = defineStore('tcg', {
     /**
      * Searches cards
      */
-    async searchCards(params: { name?: string; page?: number; pageSize?: number; rarity?: string; set?: string } = {}) {
+    async searchCards(params: { name?: string; page?: number; pageSize?: number; rarity?: TCGRarity; set?: string } = {}) {
       const { name, page = 1, pageSize = 20, rarity, set } = params
 
       if (name) {

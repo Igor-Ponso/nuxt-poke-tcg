@@ -33,7 +33,6 @@ export function useHolographicCard(
   options: HolographicCardOptions = {}
 ) {
   const {
-    cardType = 'regular-holo',
     enabled = true,
     intensity = 1,
     springConfig = {
@@ -66,7 +65,7 @@ export function useHolographicCard(
 
   // Performance optimization
   let rafId: number | null = null
-  let resetTimeoutId: number | null = null
+  let resetTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   // Spring physics simulation (simplified)
   const springState = {

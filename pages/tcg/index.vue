@@ -6,7 +6,7 @@
  */
 
 import { Icon } from '@iconify/vue'
-import type { SimplifiedTCGCard } from '~/types'
+import type { SimplifiedTCGCard, TCGRarity } from '~/types'
 
 useHead({
   title: 'TCG Gallery - PokéTCG',
@@ -17,7 +17,7 @@ const tcgStore = useTCGStore()
 const searchQuery = ref('')
 const isSearching = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
-const currentFilters = ref<{ rarity?: string; set?: string }>({})
+const currentFilters = ref<{ rarity?: TCGRarity; set?: string }>({})
 const selectedCard = ref<SimplifiedTCGCard | null>(null)
 const showCardModal = ref(false)
 
@@ -31,7 +31,7 @@ async function handleSearch() {
   isSearching.value = false
 }
 
-function handleFilter(filters: { rarity?: string; set?: string }) {
+function handleFilter(filters: { rarity?: TCGRarity; set?: string }) {
   currentFilters.value = filters
   handleSearch()
 }

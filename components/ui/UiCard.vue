@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<UiCardProps>(), {
 })
 
 const emit = defineEmits<{
-  click: [event: MouseEvent]
+  click: [event: MouseEvent | KeyboardEvent]
 }>()
 
 /**
@@ -157,7 +157,7 @@ const cardStyle = computed(() => {
 /**
  * Handle click event
  */
-function handleClick(event: MouseEvent) {
+function handleClick(event: MouseEvent | KeyboardEvent) {
   if (!props.disabled && !props.loading) {
     emit('click', event)
   }

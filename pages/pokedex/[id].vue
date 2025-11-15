@@ -48,10 +48,6 @@ function toggleFavorite() {
   }
 }
 
-function toggle3DView() {
-  show3D.value = !show3D.value
-}
-
 function toggleShiny() {
   showShiny.value = !showShiny.value
 }
