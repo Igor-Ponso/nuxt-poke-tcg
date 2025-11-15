@@ -15,7 +15,7 @@
  */
 
 import type { SimplifiedTCGCard } from '~/types'
-import type { CardType } from '~/composables/useHolographicCard'
+import type { CardType } from '~/composables/effects/useHolographicCard'
 
 export interface TCGCardProps {
   card: SimplifiedTCGCard

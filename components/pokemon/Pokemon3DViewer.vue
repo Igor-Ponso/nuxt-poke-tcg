@@ -69,7 +69,7 @@ function toggleForm() {
 /**
  * Handle model load event
  */
-function handleLoad(event: Event) {
+function handleLoad() {
   isLoading.value = false
   hasError.value = false
 

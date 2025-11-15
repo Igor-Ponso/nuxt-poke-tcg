@@ -66,6 +66,7 @@ const {
   enabled: props.holographic,
   type: props.holographicType,
   intensity: 1,
+  speed: 1,
 })
 
 /**

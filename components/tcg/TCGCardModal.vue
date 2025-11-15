@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue'
 import type { SimplifiedTCGCard } from '~/types'
 
-const props = defineProps<{
+defineProps<{
   card: SimplifiedTCGCard | null
   show: boolean
 }>()
@@ -110,13 +110,14 @@ function handleBackdropClick(event: MouseEvent) {
                       Types
                     </div>
                     <div class="flex flex-wrap gap-2">
-                      <PokemonTypeTag
+                      <!-- TODO: Create TCGTypeTag component - TCGType !== PokemonType -->
+                      <span
                         v-for="type in card.types"
                         :key="type"
-                        :type="type"
-                        size="md"
-                        variant="filled"
-                      />
+                        class="px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-white"
+                      >
+                        {{ type }}
+                      </span>
                     </div>
                   </div>
                 </div>
