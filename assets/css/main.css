@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* CSS Custom Properties */
+  :root {
+    /* Animation Durations */
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+
+    /* Easing Functions */
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Card Properties */
+    --card-aspect: 0.718;
+    --card-radius: 4.55% / 3.5%;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Font Loading */
+  body {
+    @apply font-sans antialiased;
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
+    @apply text-white;
+    @apply min-h-screen;
+  }
+
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-blue-500/30 text-white;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Utility */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Button Base */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium;
+    @apply transition-all duration-normal ease-in-out;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white;
+    @apply focus:ring-blue-500;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-600 hover:bg-gray-700 text-white;
+    @apply focus:ring-gray-500;
+  }
+
+  /* Card Base */
+  .card {
+    @apply rounded-xl overflow-hidden;
+    @apply transition-all duration-normal;
+  }
+
+  /* Input Base */
+  .input {
+    @apply px-4 py-2 rounded-lg;
+    @apply bg-white/10 border border-white/20;
+    @apply text-white placeholder-white/50;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+    @apply transition-all duration-fast;
+  }
+}
+
+@layer utilities {
+  /* Vue Transitions */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity var(--duration-normal) var(--ease-in-out);
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+
+  .slide-up-enter-active,
+  .slide-up-leave-active {
+    transition: all var(--duration-normal) var(--ease-out);
+  }
+
+  .slide-up-enter-from,
+  .slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .scale-enter-active,
+  .scale-leave-active {
+    transition: all var(--duration-normal) var(--ease-bounce);
+  }
+
+  .scale-enter-from,
+  .scale-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  /* GPU Acceleration */
+  .gpu-accelerated {
+    transform: translate3d(0, 0, 0.01px);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* Text Utilities */
+  .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  /* Background Animations */
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  .animation-delay-6000 {
+    animation-delay: 6s;
+  }
+}
