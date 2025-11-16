@@ -32,9 +32,8 @@ export interface Pokemon3DData {
   forms: Pokemon3DModel[]
 }
 
-export interface Pokemon3DResponse {
-  pokemon: Pokemon3DData[]
-}
+// API returns an array directly, not wrapped in an object
+export type Pokemon3DResponse = Pokemon3DData[]
 
 export function usePokemon3D() {
   const BASE_URL = 'https://pokemon-3d-api.onrender.com/v1'
@@ -86,7 +85,7 @@ export function usePokemon3D() {
   async function fetchPokemon3D(pokemonId: number): Promise<Pokemon3DData | null> {
     try {
       const allData = await fetchAllPokemon3D()
-      const pokemon = allData.pokemon.find(p => p.id === pokemonId)
+      const pokemon = allData.find(p => p.id === pokemonId)
       return pokemon || null
     }
     catch (error) {
