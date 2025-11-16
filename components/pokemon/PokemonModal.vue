@@ -205,6 +205,18 @@ watch(() => props.pokemon?.id, async (newId) => {
 }, { immediate: true })
 
 /**
+ * Watch for initialForm changes to update selected 2D form
+ */
+watch(() => props.initialForm, (newForm) => {
+  if (newForm) {
+    selected2DForm.value = newForm
+  }
+  else {
+    selected2DForm.value = null
+  }
+}, { immediate: true })
+
+/**
  * Update selected form based on shiny toggle (for backward compatibility)
  */
 watch(showShiny, (isShiny) => {
