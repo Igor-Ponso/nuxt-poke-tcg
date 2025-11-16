@@ -9,11 +9,13 @@ import { Icon } from '@iconify/vue'
 import type { SimplifiedPokemon } from '~/types'
 import type { Tab } from '~/components/ui/UiTabs.vue'
 import type { Pokemon3DModel } from '~/composables/pokemon/usePokemon3D'
+import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
 
 const props = defineProps<{
   pokemon: SimplifiedPokemon | null
   show: boolean
   pokemonList?: SimplifiedPokemon[]
+  initialForm?: PokemonForm | null // Form selected from the card
 }>()
 
 const emit = defineEmits<{
@@ -22,12 +24,15 @@ const emit = defineEmits<{
 }>()
 
 const pokemonStore = usePokemonStore()
-const { getAllForms, getFormIcon } = usePokemon3D()
+const { getAllForms } = usePokemon3D()
+const { getAvailableFormsForPokemon, getEnglishFormName } = usePokemonForms()
 const show3D = ref(false)
 const showShiny = ref(false)
 const activeTab = ref('about')
-const selectedForm = ref<Pokemon3DModel | null>(null)
-const availableForms = ref<Pokemon3DModel[]>([])
+const selected3DForm = ref<Pokemon3DModel | null>(null)
+const available3DForms = ref<Pokemon3DModel[]>([])
+const selected2DForm = ref<PokemonForm | null>(null)
+const available2DForms = ref<PokemonForm[]>([])
 
 /**
  * Tabs configuration
@@ -44,6 +49,26 @@ const isFavorite = computed(() => {
 
 const currentSprite = computed(() => {
   if (!props.pokemon) return ''
+
+  // If a 2D form is selected, use its sprite
+  if (selected2DForm.value?.sprites) {
+    const sprites = selected2DForm.value.sprites
+    const officialArtwork = sprites.other?.['official-artwork']
+
+    // Prefer official artwork if available
+    if (officialArtwork) {
+      return showShiny.value && officialArtwork.front_shiny
+        ? officialArtwork.front_shiny
+        : officialArtwork.front_default || sprites.front_default || props.pokemon.sprite
+    }
+
+    // Fallback to regular sprites
+    return showShiny.value && sprites.front_shiny
+      ? sprites.front_shiny
+      : sprites.front_default || props.pokemon.sprite
+  }
+
+  // Otherwise, use base Pokemon sprite
   return showShiny.value && props.pokemon.shinySprite
     ? props.pokemon.shinySprite
     : props.pokemon.sprite
@@ -142,24 +167,39 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 /**
- * Load available 3D forms when pokemon changes
+ * Load available forms when pokemon changes
  */
 watch(() => props.pokemon?.id, async (newId) => {
   if (!newId) {
-    availableForms.value = []
+    available3DForms.value = []
+    available2DForms.value = []
     return
   }
 
   try {
-    const forms = await getAllForms(newId)
-    availableForms.value = forms
-    // Reset to regular form when pokemon changes
-    selectedForm.value = forms.find(f => f.formName === 'regular') || forms[0] || null
+    // Load 3D forms
+    const forms3D = await getAllForms(newId)
+    available3DForms.value = forms3D
+    selected3DForm.value = forms3D.find(f => f.formName === 'regular') || forms3D[0] || null
+
+    // Load 2D forms (filter out the base/default form since we have a separate "Regular" button)
+    const forms2D = await getAvailableFormsForPokemon(newId)
+    available2DForms.value = forms2D.filter(f => !f.is_default)
+
+    // Initialize with form from card if provided, otherwise reset to null (base form)
+    if (props.initialForm) {
+      selected2DForm.value = props.initialForm
+    }
+    else {
+      selected2DForm.value = null
+    }
   }
   catch (error) {
-    console.error('Failed to load Pokemon 3D forms:', error)
-    availableForms.value = []
-    selectedForm.value = null
+    console.error('Failed to load Pokemon forms:', error)
+    available3DForms.value = []
+    available2DForms.value = []
+    selected3DForm.value = null
+    selected2DForm.value = null
   }
 }, { immediate: true })
 
@@ -168,9 +208,9 @@ watch(() => props.pokemon?.id, async (newId) => {
  */
 watch(showShiny, (isShiny) => {
   // Only auto-switch between regular and shiny if those are the only forms
-  if (availableForms.value.length <= 2) {
+  if (available3DForms.value.length <= 2) {
     const targetFormName = isShiny ? 'shiny' : 'regular'
-    selectedForm.value = availableForms.value.find(f => f.formName === targetFormName) || availableForms.value[0] || null
+    selected3DForm.value = available3DForms.value.find(f => f.formName === targetFormName) || available3DForms.value[0] || null
   }
 })
 
@@ -272,77 +312,122 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- Image / 3D Model Viewer -->
-              <div class="relative bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <!-- View Toggle Buttons -->
-                <div class="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 flex gap-1.5 sm:gap-2">
-                  <button
-                    type="button"
-                    class="px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm min-h-[44px] sm:min-h-0"
-                    :class="!show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
-                    @click="show3D = false"
-                  >
-                    <Icon icon="ph:image" class="w-4 h-4" />
-                    <span class="hidden xs:inline">2D</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm min-h-[44px] sm:min-h-0"
-                    :class="show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
-                    @click="show3D = true"
-                  >
-                    <Icon icon="ph:cube" class="w-4 h-4" />
-                    <span class="hidden xs:inline">3D</span>
-                  </button>
+              <!-- Image / 3D Model Viewer with Controls -->
+              <div class="flex flex-col md:flex-row gap-4 mb-4 sm:mb-6">
+                <!-- Left Sidebar: Controls -->
+                <div class="flex flex-row md:flex-col gap-2 md:w-48 flex-shrink-0">
+                  <!-- View Toggle Buttons -->
+                  <div class="flex md:flex-col gap-1.5 sm:gap-2 flex-1 md:flex-none">
+                    <button
+                      type="button"
+                      class="flex-1 md:flex-none px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center md:justify-start gap-2 text-sm font-medium min-h-[44px]"
+                      :class="!show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                      @click="show3D = false"
+                    >
+                      <Icon icon="ph:image" class="w-5 h-5" />
+                      <span class="hidden sm:inline">2D</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="flex-1 md:flex-none px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center md:justify-start gap-2 text-sm font-medium min-h-[44px]"
+                      :class="show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                      @click="show3D = true"
+                    >
+                      <Icon icon="ph:cube" class="w-5 h-5" />
+                      <span class="hidden sm:inline">3D</span>
+                    </button>
+                  </div>
+
+                  <!-- Divider -->
+                  <div class="hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2" />
+
+                  <!-- Action Buttons -->
+                  <div class="flex md:flex-col gap-1.5 sm:gap-2 flex-1 md:flex-none">
+                    <!-- Shiny Toggle -->
+                    <button
+                      v-if="pokemon.shinySprite && (!show3D || available3DForms.length <= 2)"
+                      type="button"
+                      class="flex-1 md:flex-none px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center md:justify-start gap-2 text-sm font-medium min-h-[44px]"
+                      :class="showShiny
+                        ? 'bg-yellow-400/20 dark:bg-yellow-400/30 text-yellow-700 dark:text-yellow-300 shadow-lg'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                      @click="showShiny = !showShiny"
+                    >
+                      <Icon icon="ph:sparkle-fill" class="w-5 h-5" />
+                      <span class="hidden sm:inline">Shiny</span>
+                    </button>
+
+                    <!-- Cry Button -->
+                    <button
+                      type="button"
+                      class="flex-1 md:flex-none px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center md:justify-start gap-2 text-sm font-medium min-h-[44px] bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      @click="playCry"
+                    >
+                      <Icon icon="ph:speaker-high-bold" class="w-5 h-5" />
+                      <span class="hidden sm:inline">Cry</span>
+                    </button>
+
+                    <!-- Add to Team Button -->
+                    <button
+                      type="button"
+                      class="flex-1 md:flex-none px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center md:justify-start gap-2 text-sm font-medium min-h-[44px]"
+                      :class="isFavorite
+                        ? 'bg-red-500/20 dark:bg-red-500/30 text-red-700 dark:text-red-300 shadow-lg'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                      @click="toggleFavorite"
+                    >
+                      <Icon :icon="isFavorite ? 'ph:heart-fill' : 'ph:heart'" class="w-5 h-5" />
+                      <span class="hidden sm:inline">{{ isFavorite ? 'Team' : 'Add' }}</span>
+                    </button>
+                  </div>
+
+                  <!-- Divider -->
+                  <div class="hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2" />
+
+                  <!-- Form Selector Dropdown (2D Mode) -->
+                  <div v-if="!show3D && available2DForms.length > 0" class="flex-1 md:flex-none">
+                    <select
+                      v-model="selected2DForm"
+                      class="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium min-h-[44px]"
+                    >
+                      <option :value="null">Regular</option>
+                      <option
+                        v-for="form in available2DForms"
+                        :key="form.name"
+                        :value="form"
+                      >
+                        {{ getEnglishFormName(form) }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Form Selector Dropdown (3D Mode) -->
+                  <div v-if="show3D && available3DForms.length > 2" class="flex-1 md:flex-none">
+                    <select
+                      v-model="selected3DForm"
+                      class="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium min-h-[44px]"
+                    >
+                      <option
+                        v-for="form in available3DForms"
+                        :key="form.formName"
+                        :value="form"
+                      >
+                        {{ form.name }}
+                      </option>
+                    </select>
+                  </div>
                 </div>
 
-                <!-- Action Buttons (Bottom) -->
-                <div class="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-20 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-                  <!-- Shiny Toggle - Only show in 2D mode or when there are only 2 forms (regular + shiny) -->
-                  <button
-                    v-if="pokemon.shinySprite && (!show3D || availableForms.length <= 2)"
-                    type="button"
-                    class="px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm min-h-[44px] sm:min-h-0"
-                    :class="showShiny
-                      ? 'bg-yellow-400/30 text-yellow-300 shadow-lg shadow-yellow-400/50'
-                      : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
-                    @click="showShiny = !showShiny"
-                  >
-                    <Icon icon="ph:sparkle-fill" class="w-4 h-4" />
-                    <span class="hidden xs:inline">Shiny</span>
-                  </button>
-
-                  <!-- Cry Button -->
-                  <button
-                    type="button"
-                    class="px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm min-h-[44px] sm:min-h-0 bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30"
-                    @click="playCry"
-                  >
-                    <Icon icon="ph:speaker-high-bold" class="w-4 h-4" />
-                    <span class="hidden xs:inline">Cry</span>
-                  </button>
-
-                  <!-- Add to Team Button -->
-                  <button
-                    type="button"
-                    class="px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm min-h-[44px] sm:min-h-0"
-                    :class="isFavorite
-                      ? 'bg-red-500/30 text-red-300 shadow-lg shadow-red-500/50'
-                      : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
-                    @click="toggleFavorite"
-                  >
-                    <Icon :icon="isFavorite ? 'ph:heart-fill' : 'ph:heart'" class="w-4 h-4" />
-                    <span class="hidden xs:inline">{{ isFavorite ? 'Team' : 'Add' }}</span>
-                  </button>
-                </div>
+                <!-- Right: Pokemon Image/Model -->
+                <div class="relative bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-xl sm:rounded-2xl p-6 sm:p-8 flex-1 min-h-[400px] sm:min-h-[500px]">
 
                 <!-- 2D Sprite View -->
-                <div v-if="!show3D" class="text-center py-6 sm:py-8">
+                <div v-if="!show3D" class="flex items-center justify-center h-full">
                   <div class="relative inline-block">
                     <img
                       :src="currentSprite"
                       :alt="pokemon.name"
-                      class="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 mx-auto object-contain drop-shadow-2xl transition-all duration-300"
+                      class="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] mx-auto object-contain drop-shadow-2xl transition-all duration-300"
                     >
                     <!-- Shiny sparkles for 2D -->
                     <div
@@ -368,27 +453,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- 3D Model View -->
-                <div v-else class="min-h-[400px]">
-                  <!-- Form Selector (if multiple forms available) -->
-                  <div
-                    v-if="availableForms.length > 1"
-                    class="absolute top-14 sm:top-16 left-2 right-2 sm:left-4 sm:right-4 z-20 flex flex-wrap gap-1.5 sm:gap-2 justify-center"
-                  >
-                    <button
-                      v-for="form in availableForms"
-                      :key="form.model"
-                      type="button"
-                      class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-200 flex items-center gap-1.5 text-xs sm:text-sm font-medium min-h-[36px] sm:min-h-0"
-                      :class="selectedForm?.model === form.model
-                        ? 'bg-blue-500 text-white shadow-lg scale-105'
-                        : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800'"
-                      @click="selectedForm = form"
-                    >
-                      <Icon :icon="getFormIcon(form.formName)" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      <span class="hidden xs:inline">{{ form.name }}</span>
-                    </button>
-                  </div>
-
+                <div v-else class="flex items-center justify-center h-full">
                   <ClientOnly>
                     <Transition
                       mode="out-in"
@@ -400,23 +465,24 @@ onUnmounted(() => {
                       leave-to-class="opacity-0 scale-95"
                     >
                       <Pokemon3DViewer
-                        v-if="selectedForm"
-                        :key="selectedForm.model"
+                        v-if="selected3DForm"
+                        :key="selected3DForm.model"
                         :pokemon-id="pokemon.id"
                         :pokemon-name="pokemon.name"
-                        :model-url="selectedForm.model"
-                        height="400px"
+                        :model-url="selected3DForm.model"
+                        height="100%"
                         :auto-rotate="true"
                         :camera-controls="true"
                         :show-form-toggle="false"
                       />
                     </Transition>
                     <template #fallback>
-                      <div class="flex items-center justify-center h-[400px] text-gray-500">
+                      <div class="flex items-center justify-center h-full text-gray-500">
                         <Icon icon="ph:circle-notch" class="w-8 h-8 animate-spin" />
                       </div>
                     </template>
                   </ClientOnly>
+                </div>
                 </div>
               </div>
 

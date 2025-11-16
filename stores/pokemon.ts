@@ -81,10 +81,11 @@ export const usePokemonStore = defineStore('pokemon', {
         filtered = filtered.filter(p => p.types.includes(state.selectedType as any))
       }
 
-      // Filter by search query
-      if (state.searchQuery) {
-        filtered = filtered.filter(p => matchesSearch(p.name, state.searchQuery))
-      }
+      // DO NOT filter by searchQuery here!
+      // The searchPokemons() action already handles search via API
+      // and returns the correct results in state.pokemons
+      // Double-filtering would exclude valid results (e.g., "mega" search returns Charizard,
+      // but filtering "charizard" by "mega" would remove it)
 
       return filtered
     },

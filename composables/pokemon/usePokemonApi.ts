@@ -171,19 +171,63 @@ export function usePokemonApi() {
 
   /**
    * Search Pokemon by name (client-side filtering)
+   * Searches across more Pokemon for better results
+   * Now supports form-based search (mega, gmax, alolan, etc.)
    */
   async function searchPokemon(query: string, limit = 20): Promise<SimplifiedPokemon[]> {
-    // In a real implementation, we'd use a more sophisticated search
-    // For now, fetch first 151 Pokemon and filter
-    const list = await fetchPokemonList(151, 0)
+    const normalizedQuery = query.toLowerCase().trim()
+
+    // Check if this is a form-based search
+    const formKeywords = ['mega', 'gmax', 'gigantamax', 'alolan', 'galarian', 'hisuian', 'paldean', 'primal', 'origin']
+    const isFormSearch = formKeywords.some(keyword => normalizedQuery.includes(keyword))
+
+    if (isFormSearch) {
+      // Use Pokemon Forms API to search
+      const { searchPokemonByFormType } = usePokemonForms()
+      const pokemonIds = await searchPokemonByFormType(normalizedQuery)
+
+      console.log(`[Form Search] Found ${pokemonIds.length} Pokemon IDs:`, pokemonIds.slice(0, 10))
+
+      // If no results, return empty array
+      if (pokemonIds.length === 0) {
+        console.log('[Form Search] No Pokemon found with this form')
+        return []
+      }
+
+      // Fetch Pokemon data for these IDs
+      const pokemon = await Promise.all(
+        pokemonIds.slice(0, limit).map(async (id) => {
+          try {
+            const data = await fetchPokemon(id)
+            return simplifyPokemon(data)
+          }
+          catch (error) {
+            console.error(`[Form Search] Failed to fetch Pokemon #${id}:`, error)
+            return null
+          }
+        }),
+      )
+
+      // Filter out null results
+      const validPokemon = pokemon.filter(p => p !== null) as SimplifiedPokemon[]
+      console.log(`[Form Search] Successfully fetched ${validPokemon.length} Pokemon`)
+
+      return validPokemon
+    }
+
+    // Regular name-based search
+    // Search across first 500 Pokemon for better coverage (Gen 1-4)
+    // This includes most popular Pokemon that users will search for
+    const list = await fetchPokemonList(500, 0)
     const filtered = list.results.filter(p => matchesSearch(p.name, query))
 
+    // Limit results but process them in parallel
     const pokemon = await Promise.all(
       filtered.slice(0, limit).map(async (p) => {
         const id = extractIdFromUrl(p.url)
         const data = await fetchPokemon(id)
         return simplifyPokemon(data)
-      })
+      }),
     )
 
     return pokemon

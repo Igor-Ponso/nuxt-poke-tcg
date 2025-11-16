@@ -11,9 +11,43 @@ const uiStore = useUIStore()
 const tcgStore = useTCGStore()
 const pokemonStore = usePokemonStore()
 const route = useRoute()
+const router = useRouter()
 
 const searchQuery = ref('')
 const showSearch = ref(false)
+
+// Sync search query with URL query parameter
+watch(
+  () => route.query.search,
+  (newSearch) => {
+    searchQuery.value = (newSearch as string) || ''
+  },
+  { immediate: true },
+)
+
+// Debounced function to update search in real-time (500ms delay)
+const debouncedSearch = useDebounceFn((query: string) => {
+  // Only navigate if we're already on pokedex or if query is not empty
+  if (route.path === '/pokedex') {
+    if (query.trim()) {
+      // Update query parameter
+      router.push({ path: '/pokedex', query: { search: query } })
+    }
+    else {
+      // Clear query parameter
+      router.push({ path: '/pokedex' })
+    }
+  }
+  else if (query.trim()) {
+    // Navigate to pokedex with search query
+    router.push({ path: '/pokedex', query: { search: query } })
+  }
+}, 500)
+
+// Watch search input changes with debounce for real-time search
+watch(searchQuery, (newQuery) => {
+  debouncedSearch(newQuery)
+})
 
 /**
  * Navigation links
@@ -160,10 +194,8 @@ function toggleMobileMenu() {
                 placeholder="Search Pokémon..."
                 icon="ph:magnifying-glass"
                 icon-position="left"
-                clearable
                 :full-width="false"
                 class="w-64"
-                @clear="searchQuery = ''"
               />
             </form>
           </div>
@@ -223,8 +255,6 @@ function toggleMobileMenu() {
                 placeholder="Search Pokémon..."
                 icon="ph:magnifying-glass"
                 icon-position="left"
-                clearable
-                @clear="searchQuery = ''"
               />
             </form>
           </div>

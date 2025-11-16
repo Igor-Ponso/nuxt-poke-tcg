@@ -4,10 +4,12 @@
  *
  * Displays a Pokemon card with 3D effect and optional holographic effect
  * Integrates use3DCard and useHolographic composables
+ * Supports alternate forms (Mega, Gmax, Regional variants)
  */
 
 import { Icon } from '@iconify/vue'
 import type { SimplifiedPokemon } from '~/types'
+import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
 
 export interface PokemonCardProps {
   pokemon: SimplifiedPokemon
@@ -18,9 +20,11 @@ export interface PokemonCardProps {
   showStats?: boolean
   favorited?: boolean
   showShiny?: boolean
+  showForms?: boolean
 }
 
 const shinyMode = ref(false)
+const selectedForm = ref<PokemonForm | null>(null)
 
 const props = withDefaults(defineProps<PokemonCardProps>(), {
   size: 'md',
@@ -30,12 +34,14 @@ const props = withDefaults(defineProps<PokemonCardProps>(), {
   showStats: false,
   favorited: false,
   showShiny: true,
+  showForms: true,
 })
 
 const emit = defineEmits<{
-  click: [pokemon: SimplifiedPokemon]
+  click: [pokemon: SimplifiedPokemon, selectedForm: PokemonForm | null]
   favorite: [pokemon: SimplifiedPokemon]
   shinyToggle: [isShiny: boolean]
+  formChange: [form: PokemonForm | null]
 }>()
 
 const audioRef = ref<HTMLAudioElement | null>(null)
@@ -148,9 +154,29 @@ const imageClass = computed(() => {
 })
 
 /**
- * Computed sprite URL (shiny or normal)
+ * Computed sprite URL (shiny or normal, with form support)
+ * Prefers official artwork over default sprites
  */
 const spriteUrl = computed(() => {
+  // If a form is selected, use its sprite
+  if (selectedForm.value?.sprites) {
+    const sprites = selectedForm.value.sprites
+    const officialArtwork = sprites.other?.['official-artwork']
+
+    // Prefer official artwork if available
+    if (officialArtwork) {
+      return shinyMode.value && officialArtwork.front_shiny
+        ? officialArtwork.front_shiny
+        : officialArtwork.front_default || sprites.front_default || props.pokemon.sprite
+    }
+
+    // Fallback to regular sprites
+    return shinyMode.value && sprites.front_shiny
+      ? sprites.front_shiny
+      : sprites.front_default || props.pokemon.sprite
+  }
+
+  // Otherwise, use base Pokemon sprite
   return shinyMode.value && props.pokemon.shinySprite
     ? props.pokemon.shinySprite
     : props.pokemon.sprite
@@ -169,8 +195,16 @@ const pokeballBgUrl = computed(() => {
  */
 function handleClick() {
   if (props.clickable) {
-    emit('click', props.pokemon)
+    emit('click', props.pokemon, selectedForm.value)
   }
+}
+
+/**
+ * Handle form change
+ */
+function handleFormChange(form: PokemonForm | null) {
+  selectedForm.value = form
+  emit('formChange', form)
 }
 
 /**
@@ -317,6 +351,15 @@ function handleAudioError() {
               class="w-5 h-5 sm:w-5 sm:h-5"
             />
           </button>
+
+          <!-- Form selector -->
+          <PokemonFormSelector
+            v-if="showForms"
+            :pokemon-id="pokemon.id"
+            :pokemon-name="pokemon.name"
+            :current-form="selectedForm?.name"
+            @update:form="handleFormChange"
+          />
 
           <!-- Favorite button -->
           <button

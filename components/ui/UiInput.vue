@@ -45,10 +45,10 @@ const props = withDefaults(defineProps<UiInputProps>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | number]
-  focus: [event: FocusEvent]
-  blur: [event: FocusEvent]
-  clear: []
-  enter: [event: KeyboardEvent]
+  'focus': [event: FocusEvent]
+  'blur': [event: FocusEvent]
+  'clear': []
+  'enter': [event: KeyboardEvent]
 }>()
 
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -93,7 +93,7 @@ const inputWrapperClass = computed(() => {
       'bg-red-50/50',
       'dark:bg-red-900/20',
       'focus-within:ring-2',
-      'focus-within:ring-red-500'
+      'focus-within:ring-red-500',
     )
   }
   else if (isFocused.value) {
@@ -102,7 +102,7 @@ const inputWrapperClass = computed(() => {
       'bg-white/50',
       'dark:bg-gray-800/50',
       'ring-2',
-      'ring-blue-500/50'
+      'ring-blue-500/50',
     )
   }
   else {
@@ -112,7 +112,7 @@ const inputWrapperClass = computed(() => {
       'bg-white/30',
       'dark:bg-gray-800/30',
       'hover:border-gray-400',
-      'dark:hover:border-gray-500'
+      'dark:hover:border-gray-500',
     )
   }
 
@@ -215,7 +215,10 @@ defineExpose({
       class="text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span
+        v-if="required"
+        class="text-red-500"
+      >*</span>
     </label>
 
     <!-- Input wrapper -->
@@ -227,7 +230,10 @@ defineExpose({
         aria-hidden="true"
       >
         <slot name="icon-left">
-          <Icon :icon="icon" class="w-5 h-5" />
+          <Icon
+            :icon="icon"
+            class="w-5 h-5"
+          />
         </slot>
       </span>
 
@@ -288,7 +294,10 @@ defineExpose({
         aria-hidden="true"
       >
         <slot name="icon-right">
-          <Icon :icon="icon" class="w-5 h-5" />
+          <Icon
+            :icon="icon"
+            class="w-5 h-5"
+          />
         </slot>
       </span>
     </div>

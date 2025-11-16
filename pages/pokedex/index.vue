@@ -6,6 +6,7 @@
  */
 
 import type { SimplifiedPokemon } from '~/types'
+import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
 
 useHead({
   title: 'Pokédex - PokéTCG',
@@ -15,6 +16,7 @@ useHead({
 const pokemonStore = usePokemonStore()
 const route = useRoute()
 const selectedPokemon = ref<SimplifiedPokemon | null>(null)
+const selectedPokemonForm = ref<PokemonForm | null>(null)
 const showPokemonModal = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
 const selectedGeneration = ref(0) // 0 = All generations
@@ -52,6 +54,26 @@ onMounted(async () => {
   }, { immediate: true })
 })
 
+// Debounced search function to avoid multiple API calls while typing (500ms delay)
+const debouncedSearch = useDebounceFn(async (searchQuery: string) => {
+  if (searchQuery) {
+    await pokemonStore.searchPokemons(searchQuery)
+  }
+  else {
+    // Clear search and reset to full list
+    pokemonStore.searchQuery = ''
+    await pokemonStore.fetchPokemons(1)
+  }
+}, 500)
+
+// Watch for route query changes to handle search updates
+watch(
+  () => route.query.search,
+  (newSearch) => {
+    debouncedSearch((newSearch as string) || '')
+  },
+)
+
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()
@@ -70,8 +92,9 @@ async function loadMore() {
 /**
  * Handle Pokemon card click
  */
-function handlePokemonClick(pokemon: SimplifiedPokemon) {
+function handlePokemonClick(pokemon: SimplifiedPokemon, form: PokemonForm | null = null) {
   selectedPokemon.value = pokemon
+  selectedPokemonForm.value = form
   showPokemonModal.value = true
 }
 
@@ -82,6 +105,7 @@ function closeModal() {
   showPokemonModal.value = false
   setTimeout(() => {
     selectedPokemon.value = null
+    selectedPokemonForm.value = null
   }, 300)
 }
 
@@ -132,13 +156,23 @@ function handleGenerationChange(genId: number) {
     />
 
     <!-- Pokemon Grid -->
-    <div v-if="pokemonStore.loading && pokemonStore.pokemons.length === 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div v-for="n in 8" :key="n" class="animate-pulse">
+    <div
+      v-if="pokemonStore.loading && pokemonStore.pokemons.length === 0"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      <div
+        v-for="n in 8"
+        :key="n"
+        class="animate-pulse"
+      >
         <div class="h-80 bg-gray-200 dark:bg-gray-800 rounded-2xl" />
       </div>
     </div>
 
-    <div v-else class="space-y-6">
+    <div
+      v-else
+      class="space-y-6"
+    >
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <PokemonCard
           v-for="pokemon in pokemonStore.filteredPokemons"
@@ -157,14 +191,35 @@ function handleGenerationChange(genId: number) {
         ref="loadMoreTrigger"
         class="py-8 text-center"
       >
-        <div v-if="pokemonStore.loading" class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
-          <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        <div
+          v-if="pokemonStore.loading"
+          class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400"
+        >
+          <svg
+            class="animate-spin h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           <span>Loading more Pokémon...</span>
         </div>
-        <p v-else-if="!pokemonStore.hasMore" class="text-gray-500 dark:text-gray-400">
+        <p
+          v-else-if="!pokemonStore.hasMore"
+          class="text-gray-500 dark:text-gray-400"
+        >
           No more Pokémon to load
         </p>
       </div>
@@ -175,6 +230,7 @@ function handleGenerationChange(genId: number) {
       :pokemon="selectedPokemon"
       :show="showPokemonModal"
       :pokemon-list="pokemonStore.filteredPokemons"
+      :initial-form="selectedPokemonForm"
       @close="closeModal"
       @navigate="handleModalNavigation"
     />
