@@ -8,8 +8,8 @@
  */
 
 import { Icon } from '@iconify/vue'
-import type { SimplifiedPokemon } from '~/types'
 import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
+import type { SimplifiedPokemon } from '~/types'
 
 export interface PokemonCardProps {
   pokemon: SimplifiedPokemon
