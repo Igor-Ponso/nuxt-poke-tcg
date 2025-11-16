@@ -5,10 +5,26 @@
  * Models are in GLB format, optimized for web viewing
  */
 
+export type Pokemon3DFormName =
+  | 'regular'
+  | 'shiny'
+  | 'mega'
+  | 'megaShiny'
+  | 'xy' // Mega X/Y
+  | 'sxy' // Shiny Mega X/Y
+  | 'gmax' // Gigantamax
+  | 'gmaxShiny' // Shiny Gigantamax
+  | 'alolan'
+  | 'galarian'
+  | 'hisuian'
+  | 'paldean'
+  | 'primal'
+  | 'origin'
+
 export interface Pokemon3DModel {
   name: string
   model: string
-  formName: 'regular' | 'shiny' | 'mega' | 'alolan' | 'galarian' | 'hisuian'
+  formName: Pokemon3DFormName
 }
 
 export interface Pokemon3DData {
@@ -44,10 +60,24 @@ export function usePokemon3D() {
   }
 
   /**
-   * Gets 3D model URL for a specific Pokemon by ID
+   * Gets 3D model URL for a specific Pokemon by ID and form
+   * Now supports direct model URL from API response
    */
-  function getModelUrl(pokemonId: number, form: 'regular' | 'shiny' = 'regular'): string {
+  function getModelUrl(pokemonId: number, form: Pokemon3DFormName = 'regular'): string {
+    // Fallback to CDN path construction for backward compatibility
     return `${CDN_BASE}/${form}/${pokemonId}.glb`
+  }
+
+  /**
+   * Gets the correct model URL from the forms array
+   * Preferred method as it uses the actual API data
+   */
+  async function getModelUrlByForm(pokemonId: number, formName: Pokemon3DFormName): Promise<string | null> {
+    const pokemon = await fetchPokemon3D(pokemonId)
+    if (!pokemon) return null
+
+    const form = pokemon.forms.find(f => f.formName === formName)
+    return form?.model || null
   }
 
   /**
@@ -75,11 +105,68 @@ export function usePokemon3D() {
 
   /**
    * Gets available forms for a Pokemon
+   * Returns array of form names
    */
-  async function getAvailableForms(pokemonId: number): Promise<string[]> {
+  async function getAvailableForms(pokemonId: number): Promise<Pokemon3DFormName[]> {
     const pokemon = await fetchPokemon3D(pokemonId)
     if (!pokemon) return []
     return pokemon.forms.map(f => f.formName)
+  }
+
+  /**
+   * Gets all form data for a Pokemon
+   * Returns complete form objects with names and model URLs
+   */
+  async function getAllForms(pokemonId: number): Promise<Pokemon3DModel[]> {
+    const pokemon = await fetchPokemon3D(pokemonId)
+    if (!pokemon) return []
+    return pokemon.forms
+  }
+
+  /**
+   * Format form name for display
+   */
+  function formatFormName(formName: Pokemon3DFormName): string {
+    const formattedNames: Record<Pokemon3DFormName, string> = {
+      regular: 'Regular',
+      shiny: 'Shiny',
+      mega: 'Mega',
+      megaShiny: 'Shiny Mega',
+      xy: 'Mega X/Y',
+      sxy: 'Shiny Mega X/Y',
+      gmax: 'Gigantamax',
+      gmaxShiny: 'Shiny Gigantamax',
+      alolan: 'Alolan',
+      galarian: 'Galarian',
+      hisuian: 'Hisuian',
+      paldean: 'Paldean',
+      primal: 'Primal',
+      origin: 'Origin',
+    }
+    return formattedNames[formName] || formName
+  }
+
+  /**
+   * Get icon for form type
+   */
+  function getFormIcon(formName: Pokemon3DFormName): string {
+    const formIcons: Record<Pokemon3DFormName, string> = {
+      regular: 'ph:circle',
+      shiny: 'ph:sparkle-fill',
+      mega: 'ph:lightning-fill',
+      megaShiny: 'ph:lightning-fill',
+      xy: 'ph:lightning-fill',
+      sxy: 'ph:lightning-fill',
+      gmax: 'ph:arrow-up-bold',
+      gmaxShiny: 'ph:arrow-up-bold',
+      alolan: 'ph:sun-bold',
+      galarian: 'ph:shield-fill',
+      hisuian: 'ph:mountains-fill',
+      paldean: 'ph:star-fill',
+      primal: 'ph:fire-fill',
+      origin: 'ph:atom-bold',
+    }
+    return formIcons[formName] || 'ph:circle'
   }
 
   /**
@@ -98,8 +185,12 @@ export function usePokemon3D() {
     fetchAllPokemon3D,
     fetchPokemon3D,
     getModelUrl,
+    getModelUrlByForm,
     hasModel,
     getAvailableForms,
+    getAllForms,
+    formatFormName,
+    getFormIcon,
     preloadModel,
   }
 }
