@@ -183,19 +183,7 @@ watch(() => props.pokemonId, () => {
       tone-mapping="neutral"
       @load="handleLoad"
       @error="handleError"
-    >
-      <!-- Loading slot -->
-      <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
-      <div
-        slot="poster"
-        class="flex items-center justify-center w-full h-full bg-gray-800/50"
-      >
-        <UiLoading
-          type="pokeball"
-          size="md"
-        />
-      </div>
-    </model-viewer>
+    />
 
     <!-- Form Toggle Button -->
     <div
