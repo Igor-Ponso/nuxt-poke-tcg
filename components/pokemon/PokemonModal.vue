@@ -385,7 +385,7 @@ onUnmounted(() => {
                   <div class="hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2" />
 
                   <!-- Form Selector Dropdown (2D Mode) -->
-                  <div v-if="!show3D && available2DForms.length > 0" class="flex-1 md:flex-none">
+                  <div v-if="!show3D" class="flex-1 md:flex-none">
                     <select
                       v-model="selected2DForm"
                       class="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium min-h-[44px]"
