@@ -298,9 +298,9 @@ onUnmounted(() => {
 
                 <!-- Action Buttons (Bottom) -->
                 <div class="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-20 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-                  <!-- Shiny Toggle -->
+                  <!-- Shiny Toggle - Only show in 2D mode or when there are only 2 forms (regular + shiny) -->
                   <button
-                    v-if="pokemon.shinySprite"
+                    v-if="pokemon.shinySprite && (!show3D || availableForms.length <= 2)"
                     type="button"
                     class="px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm min-h-[44px] sm:min-h-0"
                     :class="showShiny
