@@ -25,6 +25,11 @@ export interface PokemonCardProps {
 
 const shinyMode = ref(false)
 const formsStore = usePokemonFormsStore()
+const pokemonStore = usePokemonStore()
+const { getGameSprite } = useGameSprites()
+
+// Full Pokemon data (needed for game sprites)
+const fullPokemon = ref<any>(null)
 
 const props = withDefaults(defineProps<PokemonCardProps>(), {
   size: 'md',
@@ -39,6 +44,19 @@ const props = withDefaults(defineProps<PokemonCardProps>(), {
 
 // Computed property to get selected form from store
 const selectedForm = computed(() => formsStore.getSelectedForm(props.pokemon.id))
+
+// Fetch full Pokemon data when game version is selected
+watch(() => pokemonStore.selectedGameVersion, async (newVersion) => {
+  if (newVersion && !fullPokemon.value) {
+    try {
+      const api = usePokemonApi()
+      fullPokemon.value = await api.fetchPokemon(props.pokemon.id)
+    }
+    catch (error) {
+      console.error('Failed to fetch full Pokemon data:', error)
+    }
+  }
+}, { immediate: true })
 
 const emit = defineEmits<{
   click: [pokemon: SimplifiedPokemon, selectedForm: PokemonForm | null]
@@ -157,11 +175,11 @@ const imageClass = computed(() => {
 })
 
 /**
- * Computed sprite URL (shiny or normal, with form support)
- * Prefers official artwork over default sprites
+ * Computed sprite URL (shiny or normal, with form and game version support)
+ * Priority: Forms always use official artwork > Game sprites for base form > Default sprites
  */
 const spriteUrl = computed(() => {
-  // If a form is selected, use its sprite
+  // If a form is selected, ALWAYS use official artwork (forms didn't exist in old games)
   if (selectedForm.value?.sprites) {
     const sprites = selectedForm.value.sprites
     const officialArtwork = sprites.other?.['official-artwork']
@@ -179,7 +197,12 @@ const spriteUrl = computed(() => {
       : sprites.front_default || props.pokemon.sprite
   }
 
-  // Otherwise, use base Pokemon sprite
+  // For base Pokemon: if a game version is selected and we have full Pokemon data, use game sprites
+  if (pokemonStore.selectedGameVersion && fullPokemon.value) {
+    return getGameSprite(fullPokemon.value, pokemonStore.selectedGameVersion, shinyMode.value)
+  }
+
+  // Otherwise, use base Pokemon sprite (official artwork)
   return shinyMode.value && props.pokemon.shinySprite
     ? props.pokemon.shinySprite
     : props.pokemon.sprite
@@ -404,14 +427,24 @@ function handleAudioError() {
           >
         </div>
 
-        <!-- Pokemon sprite -->
-        <img
-          :src="spriteUrl"
-          :alt="pokemon.name"
-          class="relative z-10 w-full h-full object-contain drop-shadow-2xl transition-all duration-300"
-          :class="{ 'animate-pulse': shinyMode }"
-          loading="lazy"
+        <!-- Pokemon sprite with fade transition -->
+        <Transition
+          mode="out-in"
+          enter-active-class="transition-all duration-300 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition-all duration-200 ease-in"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
         >
+          <img
+            :key="spriteUrl"
+            :src="spriteUrl"
+            :alt="pokemon.name"
+            class="relative z-10 w-full h-full object-contain drop-shadow-2xl"
+            loading="lazy"
+          >
+        </Transition>
         <!-- Shiny sparkle effect -->
         <Transition
           enter-active-class="transition duration-500 ease-out"

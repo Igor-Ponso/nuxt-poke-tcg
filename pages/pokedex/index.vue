@@ -84,7 +84,14 @@ onUnmounted(() => {
  */
 async function loadMore() {
   if (!pokemonStore.hasMore || pokemonStore.loading) return
-  await pokemonStore.fetchPokemons(pokemonStore.currentPage + 1)
+
+  // If a generation is selected, load more from that generation
+  if (selectedGeneration.value !== 0) {
+    await pokemonStore.fetchByGeneration(selectedGeneration.value, pokemonStore.currentPage + 1)
+  }
+  else {
+    await pokemonStore.fetchPokemons(pokemonStore.currentPage + 1)
+  }
 }
 
 /**
@@ -124,10 +131,18 @@ async function handleModalNavigation(pokemon: SimplifiedPokemon) {
 /**
  * Handle generation change
  */
-function handleGenerationChange(genId: number) {
+async function handleGenerationChange(genId: number) {
   selectedGeneration.value = genId
-  // 0 means "All generations" = null in store
-  pokemonStore.setGenerationFilter(genId === 0 ? null : genId)
+
+  if (genId === 0) {
+    // Show all generations - reset to initial state
+    pokemonStore.clearFilters()
+    await pokemonStore.fetchPokemons(1)
+  }
+  else {
+    // Fetch specific generation
+    await pokemonStore.fetchByGeneration(genId)
+  }
 }
 </script>
 
@@ -149,6 +164,12 @@ function handleGenerationChange(genId: number) {
     <GenerationSelector
       v-model="selectedGeneration"
       @update:model-value="handleGenerationChange"
+    />
+
+    <!-- Game Sprite Selector -->
+    <GameSpriteSelector
+      v-model="pokemonStore.selectedGameVersion"
+      @update:model-value="pokemonStore.setGameVersion"
     />
 
     <!-- Pokemon Grid -->

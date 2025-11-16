@@ -7,6 +7,7 @@
 
 import { defineStore } from 'pinia'
 import type { SimplifiedPokemon, PokemonCardData, PokemonType } from '~/types'
+import { GENERATIONS } from '~/utils/constants'
 
 interface PokemonState {
   // Pokemon list
@@ -34,6 +35,9 @@ interface PokemonState {
   // View mode
   viewMode: 'grid' | 'list'
   showingFavorites: boolean
+
+  // Game sprite version (null = official artwork)
+  selectedGameVersion: string | null
 }
 
 export const usePokemonStore = defineStore('pokemon', {
@@ -57,6 +61,8 @@ export const usePokemonStore = defineStore('pokemon', {
 
     viewMode: 'grid',
     showingFavorites: false,
+
+    selectedGameVersion: null, // null = official artwork
   }),
 
   getters: {
@@ -68,7 +74,7 @@ export const usePokemonStore = defineStore('pokemon', {
 
       // Filter by generation
       if (state.selectedGeneration !== null) {
-        const gen = getGenerationByName(`Generation ${state.selectedGeneration}`)
+        const gen = GENERATIONS.find(g => g.id === state.selectedGeneration)
         if (gen) {
           filtered = filtered.filter(
             p => p.id >= gen.range.start && p.id <= gen.range.end,
@@ -165,10 +171,10 @@ export const usePokemonStore = defineStore('pokemon', {
     },
 
     /**
-     * Fetches Pokemon by generation
+     * Fetches Pokemon by generation (paginated with infinite scroll)
      */
-    async fetchByGeneration(generationId: number) {
-      const gen = getGenerationByName(`Generation ${generationId}`)
+    async fetchByGeneration(generationId: number, page = 1, limit = 20) {
+      const gen = GENERATIONS.find(g => g.id === generationId)
       if (!gen) return
 
       this.loading = true
@@ -177,27 +183,35 @@ export const usePokemonStore = defineStore('pokemon', {
 
       try {
         const api = usePokemonApi()
+
+        // Calculate offset within this generation
+        const offset = (page - 1) * limit
+        const totalInGen = gen.range.end - gen.range.start + 1
+
+        // Check if we have more to load
+        this.hasMore = (offset + limit) < totalInGen
+
+        // Get the IDs for this page
+        const startId = gen.range.start + offset
+        const endId = Math.min(startId + limit, gen.range.end + 1)
         const ids = Array.from(
-          { length: gen.range.end - gen.range.start + 1 },
-          (_, i) => gen.range.start + i,
+          { length: endId - startId },
+          (_, i) => startId + i,
         )
 
-        // Fetch in batches of 20
-        const batchSize = 20
-        const batches = []
+        // Fetch this batch
+        const batchData = await api.fetchPokemonBatch(ids)
+        const simplified = batchData.map(p => api.simplifyPokemon(p))
 
-        for (let i = 0; i < ids.length; i += batchSize) {
-          batches.push(ids.slice(i, i + batchSize))
+        // Append or replace based on page
+        if (page === 1) {
+          this.pokemons = simplified
+        }
+        else {
+          this.pokemons.push(...simplified)
         }
 
-        const allPokemon = []
-        for (const batch of batches) {
-          const batchData = await api.fetchPokemonBatch(batch)
-          const simplified = batchData.map(p => api.simplifyPokemon(p))
-          allPokemon.push(...simplified)
-        }
-
-        this.pokemons = allPokemon
+        this.currentPage = page
       }
       catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to fetch generation'
@@ -325,6 +339,13 @@ export const usePokemonStore = defineStore('pokemon', {
      */
     toggleShowingFavorites() {
       this.showingFavorites = !this.showingFavorites
+    },
+
+    /**
+     * Sets game sprite version
+     */
+    setGameVersion(version: string | null) {
+      this.selectedGameVersion = version
     },
 
     /**

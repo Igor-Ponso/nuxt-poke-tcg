@@ -117,12 +117,14 @@ export function usePokemonApi() {
    * Converts full Pokemon data to simplified format
    */
   function simplifyPokemon(pokemon: Pokemon): SimplifiedPokemon {
+    const officialArtwork = pokemon.sprites.other?.['official-artwork']
+
     return {
       id: pokemon.id,
       name: pokemon.name,
       types: pokemon.types.map(t => t.type.name as PokemonType),
-      sprite: pokemon.sprites.other?.['official-artwork'].front_default || pokemon.sprites.front_default || '',
-      shinySprite: pokemon.sprites.other?.['official-artwork'].front_shiny || pokemon.sprites.front_shiny || '',
+      sprite: officialArtwork?.front_default || pokemon.sprites.front_default || '',
+      shinySprite: officialArtwork?.front_shiny || pokemon.sprites.front_shiny || '',
       stats: {
         hp: pokemon.stats.find(s => s.stat.name === 'hp')?.base_stat || 0,
         attack: pokemon.stats.find(s => s.stat.name === 'attack')?.base_stat || 0,
