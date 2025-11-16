@@ -15,7 +15,6 @@ const props = defineProps<{
   pokemon: SimplifiedPokemon | null
   show: boolean
   pokemonList?: SimplifiedPokemon[]
-  initialForm?: PokemonForm | null // Form selected from the card
 }>()
 
 const emit = defineEmits<{
@@ -24,6 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const pokemonStore = usePokemonStore()
+const formsStore = usePokemonFormsStore()
 const { getAllForms } = usePokemon3D()
 const { getAvailableFormsForPokemon, getEnglishFormName } = usePokemonForms()
 const show3D = ref(false)
@@ -31,8 +31,17 @@ const showShiny = ref(false)
 const activeTab = ref('about')
 const selected3DForm = ref<Pokemon3DModel | null>(null)
 const available3DForms = ref<Pokemon3DModel[]>([])
-const selected2DForm = ref<PokemonForm | null>(null)
 const available2DForms = ref<PokemonForm[]>([])
+
+// Get selected 2D form from store
+const selected2DForm = computed({
+  get: () => props.pokemon ? formsStore.getSelectedForm(props.pokemon.id) : null,
+  set: (value) => {
+    if (props.pokemon) {
+      formsStore.setSelectedForm(props.pokemon.id, value)
+    }
+  },
+})
 
 /**
  * Tabs configuration
@@ -186,33 +195,12 @@ watch(() => props.pokemon?.id, async (newId) => {
     const forms2D = await getAvailableFormsForPokemon(newId)
     // Filter forms similar to PokemonFormSelector: keep only special forms (non-empty form_name)
     available2DForms.value = forms2D.filter(f => f.form_name !== '' && f.form_name !== props.pokemon?.name)
-
-    // Initialize with form from card if provided, otherwise reset to null (base form)
-    if (props.initialForm) {
-      selected2DForm.value = props.initialForm
-    }
-    else {
-      selected2DForm.value = null
-    }
   }
   catch (error) {
     console.error('Failed to load Pokemon forms:', error)
     available3DForms.value = []
     available2DForms.value = []
     selected3DForm.value = null
-    selected2DForm.value = null
-  }
-}, { immediate: true })
-
-/**
- * Watch for initialForm changes to update selected 2D form
- */
-watch(() => props.initialForm, (newForm) => {
-  if (newForm) {
-    selected2DForm.value = newForm
-  }
-  else {
-    selected2DForm.value = null
   }
 }, { immediate: true })
 

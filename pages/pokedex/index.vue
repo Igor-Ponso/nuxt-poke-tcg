@@ -6,7 +6,6 @@
  */
 
 import type { SimplifiedPokemon } from '~/types'
-import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
 
 useHead({
   title: 'Pokédex - PokéTCG',
@@ -16,7 +15,6 @@ useHead({
 const pokemonStore = usePokemonStore()
 const route = useRoute()
 const selectedPokemon = ref<SimplifiedPokemon | null>(null)
-const selectedPokemonForm = ref<PokemonForm | null>(null)
 const showPokemonModal = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
 const selectedGeneration = ref(0) // 0 = All generations
@@ -92,9 +90,8 @@ async function loadMore() {
 /**
  * Handle Pokemon card click
  */
-function handlePokemonClick(pokemon: SimplifiedPokemon, form: PokemonForm | null = null) {
+function handlePokemonClick(pokemon: SimplifiedPokemon) {
   selectedPokemon.value = pokemon
-  selectedPokemonForm.value = form
   showPokemonModal.value = true
 }
 
@@ -105,7 +102,6 @@ function closeModal() {
   showPokemonModal.value = false
   setTimeout(() => {
     selectedPokemon.value = null
-    selectedPokemonForm.value = null
   }, 300)
 }
 
@@ -230,7 +226,6 @@ function handleGenerationChange(genId: number) {
       :pokemon="selectedPokemon"
       :show="showPokemonModal"
       :pokemon-list="pokemonStore.filteredPokemons"
-      :initial-form="selectedPokemonForm"
       @close="closeModal"
       @navigate="handleModalNavigation"
     />

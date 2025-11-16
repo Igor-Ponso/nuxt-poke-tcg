@@ -24,7 +24,7 @@ export interface PokemonCardProps {
 }
 
 const shinyMode = ref(false)
-const selectedForm = ref<PokemonForm | null>(null)
+const formsStore = usePokemonFormsStore()
 
 const props = withDefaults(defineProps<PokemonCardProps>(), {
   size: 'md',
@@ -36,6 +36,9 @@ const props = withDefaults(defineProps<PokemonCardProps>(), {
   showShiny: true,
   showForms: true,
 })
+
+// Computed property to get selected form from store
+const selectedForm = computed(() => formsStore.getSelectedForm(props.pokemon.id))
 
 const emit = defineEmits<{
   click: [pokemon: SimplifiedPokemon, selectedForm: PokemonForm | null]
@@ -203,7 +206,7 @@ function handleClick() {
  * Handle form change
  */
 function handleFormChange(form: PokemonForm | null) {
-  selectedForm.value = form
+  formsStore.setSelectedForm(props.pokemon.id, form)
   emit('formChange', form)
 }
 
