@@ -9,7 +9,7 @@
 
 import { Icon } from '@iconify/vue'
 import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
-import type { SimplifiedPokemon } from '~/types'
+import type { Pokemon, SimplifiedPokemon } from '~/types'
 
 export interface PokemonCardProps {
   pokemon: SimplifiedPokemon
@@ -29,7 +29,7 @@ const pokemonStore = usePokemonStore()
 const { getGameSprite } = useGameSprites()
 
 // Full Pokemon data (needed for game sprites)
-const fullPokemon = ref<any>(null)
+const fullPokemon = ref<Pokemon | null>(null)
 
 const props = withDefaults(defineProps<PokemonCardProps>(), {
   size: 'md',
@@ -209,11 +209,22 @@ const spriteUrl = computed(() => {
 })
 
 /**
- * Pokeball background image URL
+ * Pokeball background image URL (SVG watermark to avoid opaque square)
  */
-const pokeballBgUrl = computed(() => {
-  // Use absolute path from public folder
-  return '/images/pokeball-white.png'
+const pokeballBgUrl = computed(() => '/images/pokeball-white-removebg-preview.png')
+
+/**
+ * Dynamic watermark sizing per card size (larger on smaller cards for visibility)
+ */
+const watermarkClass = computed(() => {
+  // Uniform 20% downward translation per request.
+  const sizeMap = {
+    sm: 'w-[120%] h-auto',
+    md: 'w-[110%] h-auto',
+    lg: 'w-[96%] h-auto',
+  }
+  // Added -translate-x-[10%] to shift watermark 10% left; changed rotation from 45deg to 30deg per request.
+  return `absolute bottom-0 right-0 ${sizeMap[props.size]} translate-y-[20%] -translate-x-[10%] opacity-[0.14] dark:opacity-[0.18] select-none pointer-events-none origin-bottom-right rotate-[30deg]`
 })
 
 /**
@@ -417,15 +428,7 @@ function handleAudioError() {
         :class="imageClass"
         class="relative"
       >
-        <!-- Pokeball background -->
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <img
-            :src="pokeballBgUrl"
-            alt=""
-            class="w-full h-full object-contain opacity-[0.08] dark:opacity-[0.12]"
-            aria-hidden="true"
-          >
-        </div>
+        <!-- (Watermark relocated to card container bottom-right) -->
 
         <!-- Pokemon sprite with fade transition -->
         <Transition
@@ -537,8 +540,16 @@ function handleAudioError() {
     </div>
 
     <!-- Glass overlay effect -->
-    <div
-      class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"
-    />
+    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+
+    <!-- Card watermark (bottom-right of entire card) -->
+    <img
+      :src="pokeballBgUrl"
+      alt=""
+      :class="watermarkClass + ' z-0'"
+      aria-hidden="true"
+      decoding="async"
+      loading="lazy"
+    >
   </div>
 </template>

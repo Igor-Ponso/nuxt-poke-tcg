@@ -549,16 +549,6 @@ onUnmounted(() => {
                           :camera-controls="true"
                           :show-form-toggle="false"
                         />
-                        <div
-                          v-else
-                          class="flex items-center justify-center h-full text-gray-500"
-                        >
-                          <Icon
-                            icon="ph:circle-notch"
-                            class="w-8 h-8 animate-spin"
-                          />
-                          <span class="ml-2">Loading 3D model...</span>
-                        </div>
                       </Transition>
                       <template #fallback>
                         <div class="flex items-center justify-center h-full text-gray-500">
