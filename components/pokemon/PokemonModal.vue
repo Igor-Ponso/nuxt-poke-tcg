@@ -402,7 +402,7 @@ onUnmounted(() => {
                   </div>
 
                   <!-- Form Selector Dropdown (3D Mode) -->
-                  <div v-if="show3D && available3DForms.length > 2" class="flex-1 md:flex-none">
+                  <div v-if="show3D && available3DForms.length > 0" class="flex-1 md:flex-none">
                     <select
                       v-model="selected3DForm"
                       class="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium min-h-[44px]"
