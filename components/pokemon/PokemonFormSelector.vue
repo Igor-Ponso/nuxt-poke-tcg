@@ -128,10 +128,17 @@ onUnmounted(() => {
 })
 
 /**
+ * Filter out base/default forms - only show special forms
+ */
+const specialForms = computed(() => {
+  return availableForms.value.filter(f => f.form_name !== '' && f.form_name !== props.pokemonName)
+})
+
+/**
  * Check if there are special forms (not just base form)
  */
 const hasSpecialForms = computed(() => {
-  return availableForms.value.some(f => f.form_name !== '' && f.form_name !== props.pokemonName)
+  return specialForms.value.length > 0
 })
 </script>
 
@@ -183,9 +190,9 @@ const hasSpecialForms = computed(() => {
             <span class="text-sm font-medium">Regular</span>
           </button>
 
-          <!-- Available forms -->
+          <!-- Special forms only (excludes base/default form) -->
           <button
-            v-for="form in availableForms"
+            v-for="form in specialForms"
             :key="form.name"
             type="button"
             class="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"

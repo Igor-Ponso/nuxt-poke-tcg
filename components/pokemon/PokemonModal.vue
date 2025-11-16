@@ -182,9 +182,10 @@ watch(() => props.pokemon?.id, async (newId) => {
     available3DForms.value = forms3D
     selected3DForm.value = forms3D.find(f => f.formName === 'regular') || forms3D[0] || null
 
-    // Load 2D forms (filter out the base/default form since we have a separate "Regular" button)
+    // Load 2D forms (filter out the base/default form since we have a separate "Regular" option)
     const forms2D = await getAvailableFormsForPokemon(newId)
-    available2DForms.value = forms2D.filter(f => !f.is_default)
+    // Filter forms similar to PokemonFormSelector: keep only special forms (non-empty form_name)
+    available2DForms.value = forms2D.filter(f => f.form_name !== '' && f.form_name !== props.pokemon?.name)
 
     // Initialize with form from card if provided, otherwise reset to null (base form)
     if (props.initialForm) {
