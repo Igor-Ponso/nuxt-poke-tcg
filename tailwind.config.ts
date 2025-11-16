@@ -12,6 +12,7 @@ const pokemonTypeColors = Object.entries(TYPE_COLORS).reduce(
 )
 
 export default <Partial<Config>>{
+  darkMode: 'class',
   content: [
     './components/**/*.{js,vue,ts}',
     './layouts/**/*.vue',

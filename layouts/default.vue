@@ -2,25 +2,15 @@
 /**
  * Default Layout
  *
- * Main layout with header, sidebar, and footer
+ * Main layout with header and footer
  * Includes toast container and modal portal
  */
 
 const uiStore = useUIStore()
-const route = useRoute()
 
 // Initialize stores on mount
 onMounted(() => {
   uiStore.initialize()
-})
-
-/**
- * Check if sidebar should be visible
- */
-const showSidebar = computed(() => {
-  // Hide sidebar on certain pages
-  const hiddenRoutes = ['/login', '/register', '/error']
-  return !hiddenRoutes.includes(route.path)
 })
 
 /**
@@ -73,19 +63,13 @@ const mainClass = computed(() => {
       <!-- Header -->
       <AppHeader />
 
-      <!-- Main content with sidebar -->
-      <div class="flex flex-1 relative">
-        <!-- Sidebar -->
-        <AppSidebar v-if="showSidebar" />
-
-        <!-- Main content area -->
-        <main :class="mainClass">
-          <div class="container mx-auto px-4 py-6 max-w-7xl">
-            <!-- Page content -->
-            <slot />
-          </div>
-        </main>
-      </div>
+      <!-- Main content area -->
+      <main :class="mainClass">
+        <div class="container mx-auto px-4 py-6 max-w-7xl">
+          <!-- Page content -->
+          <slot />
+        </div>
+      </main>
 
       <!-- Footer -->
       <AppFooter />

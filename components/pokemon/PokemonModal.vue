@@ -8,7 +8,7 @@
 import { Icon } from '@iconify/vue'
 import type { SimplifiedPokemon } from '~/types'
 import type { Tab } from '~/components/ui/UiTabs.vue'
-import type { Pokemon3DFormName, Pokemon3DModel } from '~/composables/pokemon/usePokemon3D'
+import type { Pokemon3DModel } from '~/composables/pokemon/usePokemon3D'
 
 const props = defineProps<{
   pokemon: SimplifiedPokemon | null
@@ -22,11 +22,11 @@ const emit = defineEmits<{
 }>()
 
 const pokemonStore = usePokemonStore()
-const { getAllForms, formatFormName, getFormIcon } = usePokemon3D()
+const { getAllForms, getFormIcon } = usePokemon3D()
 const show3D = ref(false)
 const showShiny = ref(false)
 const activeTab = ref('about')
-const selectedForm = ref<Pokemon3DFormName>('regular')
+const selectedForm = ref<Pokemon3DModel | null>(null)
 const availableForms = ref<Pokemon3DModel[]>([])
 
 /**
@@ -154,11 +154,12 @@ watch(() => props.pokemon?.id, async (newId) => {
     const forms = await getAllForms(newId)
     availableForms.value = forms
     // Reset to regular form when pokemon changes
-    selectedForm.value = 'regular'
+    selectedForm.value = forms.find(f => f.formName === 'regular') || forms[0] || null
   }
   catch (error) {
     console.error('Failed to load Pokemon 3D forms:', error)
     availableForms.value = []
+    selectedForm.value = null
   }
 }, { immediate: true })
 
@@ -168,7 +169,8 @@ watch(() => props.pokemon?.id, async (newId) => {
 watch(showShiny, (isShiny) => {
   // Only auto-switch between regular and shiny if those are the only forms
   if (availableForms.value.length <= 2) {
-    selectedForm.value = isShiny ? 'shiny' : 'regular'
+    const targetFormName = isShiny ? 'shiny' : 'regular'
+    selectedForm.value = availableForms.value.find(f => f.formName === targetFormName) || availableForms.value[0] || null
   }
 })
 
@@ -374,16 +376,16 @@ onUnmounted(() => {
                   >
                     <button
                       v-for="form in availableForms"
-                      :key="form.formName"
+                      :key="form.model"
                       type="button"
                       class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg backdrop-blur-md transition-all duration-200 flex items-center gap-1.5 text-xs sm:text-sm font-medium min-h-[36px] sm:min-h-0"
-                      :class="selectedForm === form.formName
+                      :class="selectedForm?.model === form.model
                         ? 'bg-blue-500 text-white shadow-lg scale-105'
                         : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800'"
-                      @click="selectedForm = form.formName"
+                      @click="selectedForm = form"
                     >
                       <Icon :icon="getFormIcon(form.formName)" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      <span class="hidden xs:inline">{{ formatFormName(form.formName) }}</span>
+                      <span class="hidden xs:inline">{{ form.name }}</span>
                     </button>
                   </div>
 
@@ -398,10 +400,11 @@ onUnmounted(() => {
                       leave-to-class="opacity-0 scale-95"
                     >
                       <Pokemon3DViewer
-                        :key="selectedForm"
+                        v-if="selectedForm"
+                        :key="selectedForm.model"
                         :pokemon-id="pokemon.id"
                         :pokemon-name="pokemon.name"
-                        :form="selectedForm"
+                        :model-url="selectedForm.model"
                         height="400px"
                         :auto-rotate="true"
                         :camera-controls="true"

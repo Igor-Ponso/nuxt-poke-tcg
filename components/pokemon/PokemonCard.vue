@@ -39,6 +39,7 @@ const emit = defineEmits<{
 }>()
 
 const audioRef = ref<HTMLAudioElement | null>(null)
+const isPlayingCry = ref(false)
 
 const cardRef = ref<HTMLElement | null>(null)
 
@@ -88,13 +89,14 @@ const cardClass = computed(() => {
     'overflow-hidden',
     'transition-shadow',
     'duration-200',
+    'w-full',
   ]
 
-  // Size - Increased significantly
+  // Size - Responsive with max-width
   const sizeClasses = {
-    sm: 'w-56',
-    md: 'w-72',
-    lg: 'w-96',
+    sm: 'max-w-[220px]',
+    md: 'max-w-xs',
+    lg: 'max-w-sm',
   }
   baseClasses.push(sizeClasses[props.size])
 
@@ -106,9 +108,11 @@ const cardClass = computed(() => {
   // Holographic
   if (props.holographic && holoActive.value) {
     baseClasses.push('shadow-2xl')
-  } else if (isHovering.value) {
+  }
+  else if (isHovering.value) {
     baseClasses.push('shadow-xl')
-  } else {
+  }
+  else {
     baseClasses.push('shadow-lg')
   }
 
@@ -132,13 +136,13 @@ const cardStyle = computed(() => {
 })
 
 /**
- * Computed image class - Increased Pokemon size
+ * Computed image class - Responsive Pokemon size
  */
 const imageClass = computed(() => {
   const sizeClasses = {
-    sm: 'w-40 h-40',
-    md: 'w-56 h-56',
-    lg: 'w-72 h-72',
+    sm: 'w-32 h-32 sm:w-40 sm:h-40',
+    md: 'w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56',
+    lg: 'w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64',
   }
   return `mx-auto mt-4 ${sizeClasses[props.size]}`
 })
@@ -150,6 +154,14 @@ const spriteUrl = computed(() => {
   return shinyMode.value && props.pokemon.shinySprite
     ? props.pokemon.shinySprite
     : props.pokemon.sprite
+})
+
+/**
+ * Pokeball background image URL
+ */
+const pokeballBgUrl = computed(() => {
+  // Use absolute path from public folder
+  return '/images/pokeball-white.png'
 })
 
 /**
@@ -185,8 +197,23 @@ function playCry(event: Event) {
   event.stopPropagation()
   if (audioRef.value) {
     audioRef.value.currentTime = 0
+    isPlayingCry.value = true
     audioRef.value.play()
   }
+}
+
+/**
+ * Handle audio end
+ */
+function handleAudioEnd() {
+  isPlayingCry.value = false
+}
+
+/**
+ * Handle audio error
+ */
+function handleAudioError() {
+  isPlayingCry.value = false
 }
 </script>
 
@@ -224,47 +251,85 @@ function playCry(event: Event) {
     />
 
     <!-- Card content -->
-    <div class="relative z-10 p-6">
+    <div class="relative z-10 p-4 sm:p-5 md:p-6">
       <!-- Header -->
       <div class="flex items-start justify-between mb-3">
         <!-- Pokemon ID -->
-        <span class="text-sm font-bold text-white/80">
+        <span class="text-xs sm:text-sm font-bold text-white/80">
           #{{ pokemon.id.toString().padStart(3, '0') }}
         </span>
 
         <!-- Action buttons -->
-        <div class="flex items-center gap-2">
-          <!-- Cry button -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Cry button with audio wave -->
           <button
-            class="p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
+            class="relative p-2 sm:p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+            :class="isPlayingCry ? 'bg-blue-400/30 text-blue-200 shadow-lg shadow-blue-400/50' : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'"
             type="button"
             aria-label="Play cry"
             @click="playCry"
           >
-            <Icon icon="ph:speaker-high-bold" class="w-5 h-5" />
+            <Icon
+              icon="ph:speaker-high-bold"
+              class="w-5 h-5 sm:w-5 sm:h-5"
+            />
+
+            <!-- Audio wave visualization -->
+            <Transition
+              enter-active-class="transition duration-200 ease-out"
+              enter-from-class="opacity-0 scale-75"
+              enter-to-class="opacity-100 scale-100"
+              leave-active-class="transition duration-200 ease-in"
+              leave-from-class="opacity-100 scale-100"
+              leave-to-class="opacity-0 scale-75"
+            >
+              <div
+                v-if="isPlayingCry"
+                class="absolute -right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5"
+              >
+                <div
+                  class="w-0.5 h-2 bg-blue-300 rounded-full animate-pulse"
+                  style="animation-delay: 0ms"
+                />
+                <div
+                  class="w-0.5 h-3 bg-blue-300 rounded-full animate-pulse"
+                  style="animation-delay: 100ms"
+                />
+                <div
+                  class="w-0.5 h-2.5 bg-blue-300 rounded-full animate-pulse"
+                  style="animation-delay: 200ms"
+                />
+              </div>
+            </Transition>
           </button>
 
           <!-- Shiny button -->
           <button
             v-if="showShiny && pokemon.shinySprite"
-            class="p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm"
+            class="p-2 sm:p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             :class="shinyMode ? 'bg-yellow-400/30 text-yellow-300 shadow-lg shadow-yellow-400/50' : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'"
             type="button"
             aria-label="Toggle shiny"
             @click="handleShinyToggle"
           >
-            <Icon icon="ph:sparkle-fill" class="w-5 h-5" />
+            <Icon
+              icon="ph:sparkle-fill"
+              class="w-5 h-5 sm:w-5 sm:h-5"
+            />
           </button>
 
           <!-- Favorite button -->
           <button
-            class="p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm"
+            class="p-2 sm:p-1.5 rounded-lg transition-all duration-300 backdrop-blur-sm min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             :class="favorited ? 'bg-red-500/30 text-red-400 shadow-lg shadow-red-500/50' : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'"
             type="button"
             aria-label="Toggle favorite"
             @click="handleFavorite"
           >
-            <Icon :icon="favorited ? 'ph:heart-fill' : 'ph:heart'" class="w-5 h-5" />
+            <Icon
+              :icon="favorited ? 'ph:heart-fill' : 'ph:heart'"
+              class="w-5 h-5 sm:w-5 sm:h-5"
+            />
           </button>
         </div>
       </div>
@@ -274,14 +339,30 @@ function playCry(event: Event) {
         ref="audioRef"
         :src="`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${pokemon.id}.ogg`"
         preload="none"
+        @ended="handleAudioEnd"
+        @error="handleAudioError"
       />
 
       <!-- Pokemon Image -->
-      <div :class="imageClass" class="relative">
+      <div
+        :class="imageClass"
+        class="relative"
+      >
+        <!-- Pokeball background -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <img
+            :src="pokeballBgUrl"
+            alt=""
+            class="w-full h-full object-contain opacity-[0.08] dark:opacity-[0.12]"
+            aria-hidden="true"
+          >
+        </div>
+
+        <!-- Pokemon sprite -->
         <img
           :src="spriteUrl"
           :alt="pokemon.name"
-          class="w-full h-full object-contain drop-shadow-2xl transition-all duration-300"
+          class="relative z-10 w-full h-full object-contain drop-shadow-2xl transition-all duration-300"
           :class="{ 'animate-pulse': shinyMode }"
           loading="lazy"
         >
@@ -335,12 +416,12 @@ function playCry(event: Event) {
       </div>
 
       <!-- Pokemon Name -->
-      <h3 class="mt-4 text-center text-xl font-bold text-white capitalize drop-shadow-lg">
+      <h3 class="mt-3 sm:mt-4 text-center text-lg sm:text-xl font-bold text-white capitalize drop-shadow-lg">
         {{ formatPokemonName(pokemon.name) }}
       </h3>
 
       <!-- Types -->
-      <div class="flex items-center justify-center gap-2 mt-2">
+      <div class="flex items-center justify-center gap-1.5 sm:gap-2 mt-2">
         <PokemonTypeTag
           v-for="type in pokemon.types"
           :key="type"
@@ -351,7 +432,10 @@ function playCry(event: Event) {
       </div>
 
       <!-- Stats (optional) -->
-      <div v-if="showStats" class="mt-4 space-y-2">
+      <div
+        v-if="showStats"
+        class="mt-4 space-y-2"
+      >
         <div
           v-for="(value, stat) in pokemon.stats"
           :key="stat"

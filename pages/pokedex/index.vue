@@ -16,6 +16,11 @@ const pokemonStore = usePokemonStore()
 const route = useRoute()
 const selectedPokemon = ref<SimplifiedPokemon | null>(null)
 const showPokemonModal = ref(false)
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+const selectedGeneration = ref(0) // 0 = All generations
+
+// Infinite scroll observer
+let observer: IntersectionObserver | null = null
 
 // Initialize store
 onMounted(async () => {
@@ -24,6 +29,33 @@ onMounted(async () => {
   // Apply query params if present
   if (route.query.search) {
     await pokemonStore.searchPokemons(route.query.search as string)
+  }
+
+  // Setup infinite scroll observer
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && pokemonStore.hasMore && !pokemonStore.loading) {
+      loadMore()
+    }
+  }, {
+    threshold: 0.1,
+    rootMargin: '100px',
+  })
+
+  // Watch for trigger element
+  watch(loadMoreTrigger, (newEl, oldEl) => {
+    if (oldEl && observer) {
+      observer.unobserve(oldEl)
+    }
+    if (newEl && observer) {
+      observer.observe(newEl)
+    }
+  }, { immediate: true })
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+    observer = null
   }
 })
 
@@ -52,6 +84,31 @@ function closeModal() {
     selectedPokemon.value = null
   }, 300)
 }
+
+/**
+ * Handle navigation in modal
+ */
+async function handleModalNavigation(pokemon: SimplifiedPokemon) {
+  selectedPokemon.value = pokemon
+
+  // Auto-load more if we're near the end and there's more to load
+  const currentList = pokemonStore.filteredPokemons
+  const currentIndex = currentList.findIndex(p => p.id === pokemon.id)
+  const isNearEnd = currentIndex >= currentList.length - 3
+
+  if (isNearEnd && pokemonStore.hasMore && !pokemonStore.loading) {
+    await loadMore()
+  }
+}
+
+/**
+ * Handle generation change
+ */
+function handleGenerationChange(genId: number) {
+  selectedGeneration.value = genId
+  // 0 means "All generations" = null in store
+  pokemonStore.setGenerationFilter(genId === 0 ? null : genId)
+}
 </script>
 
 <template>
@@ -67,6 +124,12 @@ function closeModal() {
         </p>
       </div>
     </div>
+
+    <!-- Generation Selector -->
+    <GenerationSelector
+      v-model="selectedGeneration"
+      @update:model-value="handleGenerationChange"
+    />
 
     <!-- Pokemon Grid -->
     <div v-if="pokemonStore.loading && pokemonStore.pokemons.length === 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -88,16 +151,22 @@ function closeModal() {
         />
       </div>
 
-      <!-- Load More Button -->
-      <div v-if="pokemonStore.hasMore" class="flex justify-center pt-8">
-        <UiButton
-          variant="secondary"
-          size="lg"
-          :loading="pokemonStore.loading"
-          @click="loadMore"
-        >
-          Load More Pokémon
-        </UiButton>
+      <!-- Infinite Scroll Trigger -->
+      <div
+        v-if="pokemonStore.pokemons.length > 0"
+        ref="loadMoreTrigger"
+        class="py-8 text-center"
+      >
+        <div v-if="pokemonStore.loading" class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
+          <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading more Pokémon...</span>
+        </div>
+        <p v-else-if="!pokemonStore.hasMore" class="text-gray-500 dark:text-gray-400">
+          No more Pokémon to load
+        </p>
       </div>
     </div>
 
@@ -105,7 +174,9 @@ function closeModal() {
     <PokemonModal
       :pokemon="selectedPokemon"
       :show="showPokemonModal"
+      :pokemon-list="pokemonStore.filteredPokemons"
       @close="closeModal"
+      @navigate="handleModalNavigation"
     />
   </div>
 </template>

@@ -6,6 +6,8 @@
  * Follows glassmorphism design pattern from architecture
  */
 
+import { Icon } from '@iconify/vue'
+
 export interface UiInputProps {
   modelValue?: string | number
   type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url'
@@ -225,7 +227,7 @@ defineExpose({
         aria-hidden="true"
       >
         <slot name="icon-left">
-          {{ icon }}
+          <Icon :icon="icon" class="w-5 h-5" />
         </slot>
       </span>
 
@@ -286,7 +288,7 @@ defineExpose({
         aria-hidden="true"
       >
         <slot name="icon-right">
-          {{ icon }}
+          <Icon :icon="icon" class="w-5 h-5" />
         </slot>
       </span>
     </div>

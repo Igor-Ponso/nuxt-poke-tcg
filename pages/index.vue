@@ -1,279 +1,218 @@
 <script setup lang="ts">
 /**
- * Home Page
+ * Home Page - Landing/Entry Point
  *
- * Landing page with hero section, features, and quick stats
+ * Main navigation hub with search and quick access to all sections
  */
 
 import { Icon } from '@iconify/vue'
-import type { SimplifiedPokemon } from '~/types'
 
 useHead({
-  title: 'Home - PokéTCG',
+  title: 'PokéTCG - Your Ultimate Pokémon Companion',
   meta: [
-    { name: 'description', content: 'Your ultimate Pokémon companion with complete Pokédex and TCG card collection' },
+    { name: 'description', content: 'Explore the complete Pokédex, TCG cards, moves, abilities, items, and more' },
   ],
 })
 
-const pokemonStore = usePokemonStore()
-const tcgStore = useTCGStore()
-
-// Initialize stores
-onMounted(async () => {
-  await pokemonStore.initialize()
-  await tcgStore.initialize()
-})
+const searchQuery = ref('')
+const router = useRouter()
 
 /**
- * Featured Pokémon (starters from Gen 1)
+ * Navigation sections with dynamic routing
  */
-const featuredPokemon = ref<SimplifiedPokemon[]>([])
-
-/**
- * Load featured Pokémon
- */
-async function loadFeaturedPokemon() {
-  const api = usePokemonApi()
-  const starterIds = [1, 4, 7, 25] // Bulbasaur, Charmander, Squirtle, Pikachu
-
-  try {
-    const promises = starterIds.map(async (id) => {
-      const pokemon = await api.fetchPokemon(id)
-      return api.simplifyPokemon(pokemon)
-    })
-
-    featuredPokemon.value = await Promise.all(promises)
-  }
-  catch (error) {
-    console.error('Error loading featured Pokemon:', error)
-  }
-}
-
-onMounted(() => {
-  loadFeaturedPokemon()
-})
-
-/**
- * Stats for hero section
- */
-const stats = computed(() => [
+const navigationSections = [
   {
-    label: 'Pokémon',
-    value: '1025+',
-    icon: 'ph:books',
-    description: 'From all generations',
+    title: 'Pokédex',
+    description: 'Browse all Pokémon',
+    icon: 'ph:books-bold',
+    route: '/pokedex',
+    color: 'from-red-500 to-pink-500',
+    available: true,
   },
   {
-    label: 'TCG Cards',
-    value: '10,000+',
-    icon: 'ph:cards',
-    description: 'Physical trading cards',
-  },
-  {
-    label: 'Types',
-    value: '18',
-    icon: 'ph:lightning',
-    description: 'Unique Pokémon types',
-  },
-  {
-    label: 'Generations',
-    value: '9',
-    icon: 'ph:star-four',
-    description: 'Complete generations',
-  },
-])
-
-/**
- * Features
- */
-const features = [
-  {
-    title: 'Complete Pokédex',
-    description: 'Browse through all Pokémon from Generation I to IX with detailed stats, abilities, and evolution chains.',
-    icon: 'ph:books',
+    title: 'Moves',
+    description: 'All Pokémon moves',
+    icon: 'ph:sword-bold',
+    route: '/moves',
     color: 'from-blue-500 to-cyan-500',
+    available: false,
   },
   {
-    title: 'TCG Gallery',
-    description: 'Explore thousands of Pokémon Trading Card Game cards with high-quality images and holographic effects.',
-    icon: 'ph:cards',
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    title: 'Build Your Team',
-    description: 'Create your dream team by favoriting up to 6 Pokémon and view their combined stats and type coverage.',
-    icon: 'ph:star',
+    title: 'Abilities',
+    description: 'Pokémon abilities',
+    icon: 'ph:lightning-bold',
+    route: '/abilities',
     color: 'from-yellow-500 to-orange-500',
+    available: false,
   },
   {
-    title: 'Holographic Cards',
-    description: 'Experience photorealistic holographic effects on TCG cards with multiple foil patterns and 3D animations.',
-    icon: 'ph:sparkle',
+    title: 'Items',
+    description: 'All items',
+    icon: 'ph:backpack-bold',
+    route: '/items',
+    color: 'from-purple-500 to-indigo-500',
+    available: false,
+  },
+  {
+    title: 'Locations',
+    description: 'Explore regions',
+    icon: 'ph:map-pin-bold',
+    route: '/locations',
     color: 'from-green-500 to-emerald-500',
+    available: false,
+  },
+  {
+    title: 'Type Charts',
+    description: 'Type effectiveness',
+    icon: 'ph:chart-bar-bold',
+    route: '/type-charts',
+    color: 'from-teal-500 to-cyan-500',
+    available: false,
   },
 ]
+
+/**
+ * Handle search submission
+ */
+function handleSearch() {
+  if (!searchQuery.value.trim()) return
+
+  // Navigate to Pokedex with search query
+  router.push({
+    path: '/pokedex',
+    query: { search: searchQuery.value.trim() },
+  })
+}
+
+/**
+ * Navigate to section
+ */
+function navigateToSection(section: typeof navigationSections[0]) {
+  if (!section.available) {
+    // TODO: Show "Coming soon" toast
+    console.log(`${section.title} coming soon!`)
+    return
+  }
+
+  router.push(section.route)
+}
 </script>
 
 <template>
-  <div class="space-y-16">
-    <!-- Hero Section -->
-    <section class="text-center space-y-8 py-12">
-      <!-- Hero Content -->
-      <div class="space-y-6">
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white">
-          <span class="block">Welcome to</span>
+  <div class="min-h-[80vh] flex items-center justify-center px-4">
+    <div class="w-full max-w-4xl space-y-12">
+      <!-- Hero Title -->
+      <div class="text-center space-y-4">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold">
+          <span class="block text-gray-900 dark:text-white">Welcome to</span>
           <span
             class="block bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500 bg-clip-text text-transparent"
           >
             PokéTCG
           </span>
         </h1>
-
-        <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-          Your ultimate Pokémon companion with a complete Pokédex and TCG card collection.
-          Gotta catch 'em all!
+        <p class="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400">
+          Your ultimate Pokémon companion
         </p>
+      </div>
 
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <UiButton
-            variant="primary"
-            size="lg"
-            @click="navigateTo('/pokedex')"
+      <!-- Search Bar -->
+      <div class="relative max-w-2xl mx-auto">
+        <div class="relative">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search Pokemon, Move, Ability, etc..."
+            class="w-full px-4 py-3 sm:px-5 sm:py-4 md:px-6 md:py-5 text-base sm:text-lg rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-lg"
+            @keyup.enter="handleSearch"
           >
-            <Icon icon="ph:books" class="w-5 h-5" />
-            Explore Pokédex
-          </UiButton>
-
-          <UiButton
-            variant="secondary"
-            size="lg"
-            @click="navigateTo('/tcg')"
+          <button
+            type="button"
+            class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!searchQuery.trim()"
+            @click="handleSearch"
           >
-            <Icon icon="ph:cards" class="w-5 h-5" />
-            Browse TCG Cards
-          </UiButton>
+            <Icon icon="ph:magnifying-glass-bold" class="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12">
-        <UiCard
-          v-for="stat in stats"
-          :key="stat.label"
-          variant="glass"
-          padding="lg"
-          class="text-center"
+      <!-- Navigation Grid -->
+      <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <button
+          v-for="section in navigationSections"
+          :key="section.title"
+          type="button"
+          class="group relative overflow-hidden rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white/30 dark:bg-gray-800/30 backdrop-blur-md p-4 sm:p-5 md:p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          :disabled="!section.available"
+          @click="navigateToSection(section)"
         >
-          <div class="space-y-2">
-            <div class="text-4xl flex items-center justify-center">
-              <Icon :icon="stat.icon" class="w-10 h-10" />
-            </div>
-            <div class="text-3xl font-bold text-gray-900 dark:text-white">
-              {{ stat.value }}
-            </div>
-            <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {{ stat.label }}
-            </div>
-            <div class="text-xs text-gray-600 dark:text-gray-400">
-              {{ stat.description }}
-            </div>
-          </div>
-        </UiCard>
-      </div>
-    </section>
+          <!-- Gradient Background (on hover) -->
+          <div
+            class="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+            :class="section.color"
+          />
 
-    <!-- Featured Pokémon -->
-    <section v-if="featuredPokemon.length > 0" class="space-y-8">
-      <div class="text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Featured Pokémon
-        </h2>
-        <p class="text-lg text-gray-600 dark:text-gray-400">
-          Meet some of the most iconic Pokémon
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <PokemonCard
-          v-for="pokemon in featuredPokemon"
-          :key="pokemon.id"
-          :pokemon="pokemon"
-          size="md"
-          :favorited="pokemonStore.isFavorite(pokemon.id)"
-          @click="navigateTo(`/pokedex/${pokemon.id}`)"
-          @favorite="pokemonStore.toggleFavorite(pokemon)"
-        />
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section class="space-y-8">
-      <div class="text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Features
-        </h2>
-        <p class="text-lg text-gray-600 dark:text-gray-400">
-          Everything you need to explore the Pokémon universe
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UiCard
-          v-for="feature in features"
-          :key="feature.title"
-          variant="glass"
-          padding="lg"
-          hoverable
-        >
-          <div class="flex items-start gap-4">
+          <!-- Content -->
+          <div class="relative space-y-3">
+            <!-- Icon -->
             <div
-              class="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-              :class="`bg-gradient-to-br ${feature.color}`"
+              class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br"
+              :class="section.color"
             >
-              <Icon :icon="feature.icon" class="w-8 h-8 text-white" />
+              <Icon :icon="section.icon" class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
-            <div class="flex-1 space-y-2">
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-                {{ feature.title }}
+
+            <!-- Text -->
+            <div>
+              <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                {{ section.title }}
               </h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                {{ feature.description }}
+              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {{ section.description }}
               </p>
+
+              <!-- Coming Soon Badge -->
+              <span
+                v-if="!section.available"
+                class="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-md bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+              >
+                Coming Soon
+              </span>
             </div>
           </div>
-        </UiCard>
+        </button>
       </div>
-    </section>
 
-    <!-- CTA Section -->
-    <section class="py-16">
-      <UiCard
-        variant="glass"
-        padding="lg"
-        class="text-center"
-        gradient
-        gradient-from="#3b82f6"
-        gradient-to="#8b5cf6"
-      >
-        <div class="space-y-6">
-          <h2 class="text-3xl md:text-4xl font-bold text-white">
-            Ready to Start Your Journey?
-          </h2>
-          <p class="text-xl text-white/90 max-w-2xl mx-auto">
-            Discover over 1,000 Pokémon, build your dream team, and explore thousands of TCG cards.
-          </p>
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <UiButton
-              variant="secondary"
-              size="lg"
-              @click="navigateTo('/pokedex')"
-            >
-              Get Started
-            </UiButton>
+      <!-- Quick Stats -->
+      <div class="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-center pt-8">
+        <div>
+          <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            1025+
+          </div>
+          <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            Pokémon
           </div>
         </div>
-      </UiCard>
-    </section>
+        <div class="w-px h-10 sm:h-12 bg-gray-300 dark:bg-gray-600" />
+        <div>
+          <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            9
+          </div>
+          <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            Generations
+          </div>
+        </div>
+        <div class="w-px h-10 sm:h-12 bg-gray-300 dark:bg-gray-600" />
+        <div>
+          <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            18
+          </div>
+          <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            Types
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

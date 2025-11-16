@@ -18,6 +18,7 @@ export interface Pokemon3DViewerProps {
   pokemonId: number
   pokemonName: string
   form?: Pokemon3DFormName
+  modelUrl?: string // Direct model URL (overrides form-based URL)
   autoRotate?: boolean
   cameraControls?: boolean
   height?: string
@@ -52,9 +53,13 @@ const modelViewerRef = ref<any>(null)
 const cameraOrbit = ref('0deg 75deg auto')
 
 /**
- * Computed model URL based on current form
+ * Computed model URL based on current form or direct URL
  */
 const modelUrl = computed(() => {
+  // Use direct model URL if provided (overrides form-based lookup)
+  if (props.modelUrl) {
+    return props.modelUrl
+  }
   return getModelUrl(props.pokemonId, currentForm.value)
 })
 
