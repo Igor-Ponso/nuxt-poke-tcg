@@ -17,7 +17,7 @@ const tcgStore = useTCGStore()
 const searchQuery = ref('')
 const isSearching = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
-const currentFilters = ref<{ rarity?: TCGRarity; set?: string }>({})
+const currentFilters = ref<{ rarity?: TCGRarity, set?: string }>({})
 const selectedCard = ref<SimplifiedTCGCard | null>(null)
 const showCardModal = ref(false)
 
@@ -31,7 +31,7 @@ async function handleSearch() {
   isSearching.value = false
 }
 
-function handleFilter(filters: { rarity?: TCGRarity; set?: string }) {
+function handleFilter(filters: { rarity?: TCGRarity, set?: string }) {
   currentFilters.value = filters
   handleSearch()
 }
@@ -140,20 +140,33 @@ onMounted(async () => {
           :disabled="isSearching"
           @click="handleSearch"
         >
-          <Icon icon="ph:magnifying-glass-bold" class="w-5 h-5" />
+          <Icon
+            icon="ph:magnifying-glass-bold"
+            class="w-5 h-5"
+          />
           <span>Search</span>
         </button>
       </div>
     </div>
 
     <!-- Cards Grid -->
-    <div v-if="tcgStore.loading && tcgStore.cards.length === 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 place-items-center">
-      <div v-for="n in 20" :key="n" class="w-56 h-80 animate-pulse">
+    <div
+      v-if="tcgStore.loading && tcgStore.cards.length === 0"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 place-items-center"
+    >
+      <div
+        v-for="n in 20"
+        :key="n"
+        class="w-56 h-80 animate-pulse"
+      >
         <div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-xl shadow-lg" />
       </div>
     </div>
 
-    <div v-else-if="tcgStore.cards.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 place-items-center">
+    <div
+      v-else-if="tcgStore.cards.length > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 place-items-center"
+    >
       <TCGCard
         v-for="card in tcgStore.filteredCards"
         :key="card.id"
@@ -165,11 +178,18 @@ onMounted(async () => {
       />
     </div>
 
-    <div v-else class="text-center py-20">
+    <div
+      v-else
+      class="text-center py-20"
+    >
       <p class="text-xl text-gray-600 dark:text-gray-400">
         No cards found
       </p>
-      <UiButton variant="primary" class="mt-4" @click="tcgStore.searchCards({ pageSize: 20 })">
+      <UiButton
+        variant="primary"
+        class="mt-4"
+        @click="tcgStore.searchCards({ pageSize: 20 })"
+      >
         Load Cards
       </UiButton>
     </div>
@@ -180,11 +200,20 @@ onMounted(async () => {
       ref="loadMoreTrigger"
       class="py-8 text-center"
     >
-      <div v-if="tcgStore.loading" class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
-        <Icon icon="ph:circle-notch" class="w-5 h-5 animate-spin" />
+      <div
+        v-if="tcgStore.loading"
+        class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400"
+      >
+        <Icon
+          icon="ph:circle-notch"
+          class="w-5 h-5 animate-spin"
+        />
         <span>Loading more cards...</span>
       </div>
-      <p v-else-if="!tcgStore.hasMore" class="text-gray-500 dark:text-gray-400">
+      <p
+        v-else-if="!tcgStore.hasMore"
+        class="text-gray-500 dark:text-gray-400"
+      >
         No more cards to load
       </p>
     </div>

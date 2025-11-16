@@ -44,10 +44,10 @@ export default <Partial<Config>>{
         mono: ['JetBrains Mono', 'monospace'],
       },
       aspectRatio: {
-        'card': '0.718', // Pokemon card ratio
+        card: '0.718', // Pokemon card ratio
       },
       screens: {
-        'xs': '475px',
+        xs: '475px',
       },
       boxShadow: {
         'glow': '0 0 20px var(--glow-color, rgba(0, 0, 0, 0.3))',
@@ -60,12 +60,12 @@ export default <Partial<Config>>{
         'bounce-slow': 'bounce 2s infinite',
       },
       transitionDuration: {
-        'fast': '150ms',
-        'normal': '300ms',
-        'slow': '500ms',
+        fast: '150ms',
+        normal: '300ms',
+        slow: '500ms',
       },
       transitionTimingFunction: {
-        'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       },
     },
   },

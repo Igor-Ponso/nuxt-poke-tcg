@@ -37,7 +37,7 @@ const teamStats = computed(() => {
       acc.speed += pokemon.stats.speed
       return acc
     },
-    { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }
+    { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
   )
 
   const count = favorites.value.length
@@ -76,7 +76,10 @@ const teamTypes = computed(() => {
     </div>
 
     <!-- Empty State -->
-    <div v-if="favorites.length === 0" class="text-center py-20">
+    <div
+      v-if="favorites.length === 0"
+      class="text-center py-20"
+    >
       <div class="text-6xl mb-4">
         ⭐
       </div>
@@ -86,22 +89,39 @@ const teamTypes = computed(() => {
       <p class="text-gray-600 dark:text-gray-400 mb-6">
         Start building your dream team by favoriting Pokemon from the Pokedex!
       </p>
-      <UiButton variant="primary" size="lg" @click="navigateTo('/pokedex')">
+      <UiButton
+        variant="primary"
+        size="lg"
+        @click="navigateTo('/pokedex')"
+      >
         Browse Pokédex
       </UiButton>
     </div>
 
     <!-- Team Content -->
-    <div v-else class="space-y-8">
+    <div
+      v-else
+      class="space-y-8"
+    >
       <!-- Team Stats -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Average Stats -->
-        <UiCard variant="glass" padding="lg">
+        <UiCard
+          variant="glass"
+          padding="lg"
+        >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Average Stats
           </h2>
-          <div v-if="teamStats" class="space-y-3">
-            <div v-for="(value, stat) in teamStats" :key="stat" class="space-y-1">
+          <div
+            v-if="teamStats"
+            class="space-y-3"
+          >
+            <div
+              v-for="(value, stat) in teamStats"
+              :key="stat"
+              class="space-y-1"
+            >
               <div class="flex items-center justify-between text-sm">
                 <span class="font-medium text-gray-700 dark:text-gray-300 capitalize">
                   {{ stat }}
@@ -121,7 +141,10 @@ const teamTypes = computed(() => {
         </UiCard>
 
         <!-- Type Coverage -->
-        <UiCard variant="glass" padding="lg">
+        <UiCard
+          variant="glass"
+          padding="lg"
+        >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Type Coverage
           </h2>

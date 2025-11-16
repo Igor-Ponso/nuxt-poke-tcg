@@ -6,10 +6,10 @@
  */
 
 import { Icon } from '@iconify/vue'
-import type { SimplifiedPokemon } from '~/types'
 import type { Tab } from '~/components/ui/UiTabs.vue'
 import type { Pokemon3DModel } from '~/composables/pokemon/usePokemon3D'
 import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
+import type { SimplifiedPokemon } from '~/types'
 
 const props = defineProps<{
   pokemon: SimplifiedPokemon | null
@@ -33,7 +33,7 @@ const selected3DForm = ref<Pokemon3DModel | null>(null)
 const available3DForms = ref<Pokemon3DModel[]>([])
 const available2DForms = ref<PokemonForm[]>([])
 
-// Get selected 2D form from store
+// Get selected 2D form from store with computed getter/setter
 const selected2DForm = computed({
   get: () => props.pokemon ? formsStore.getSelectedForm(props.pokemon.id) : null,
   set: (value) => {
@@ -81,6 +81,15 @@ const currentSprite = computed(() => {
   return showShiny.value && props.pokemon.shinySprite
     ? props.pokemon.shinySprite
     : props.pokemon.sprite
+})
+
+/**
+ * Get current 3D form name for the Pokemon3DViewer component
+ */
+const current3DFormName = computed(() => {
+  const formName = selected3DForm.value?.formName || 'regular'
+  console.log('[PokemonModal] current3DFormName computed:', formName)
+  return formName
 })
 
 /**
@@ -166,10 +175,12 @@ function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'ArrowLeft') {
     event.preventDefault()
     navigatePrevious()
-  } else if (event.key === 'ArrowRight') {
+  }
+  else if (event.key === 'ArrowRight') {
     event.preventDefault()
     navigateNext()
-  } else if (event.key === 'Escape') {
+  }
+  else if (event.key === 'Escape') {
     event.preventDefault()
     handleClose()
   }
@@ -187,9 +198,12 @@ watch(() => props.pokemon?.id, async (newId) => {
 
   try {
     // Load 3D forms
+    console.log(`[PokemonModal] Loading 3D forms for Pokemon #${newId}`)
     const forms3D = await getAllForms(newId)
+    console.log(`[PokemonModal] 3D forms loaded:`, forms3D)
     available3DForms.value = forms3D
     selected3DForm.value = forms3D.find(f => f.formName === 'regular') || forms3D[0] || null
+    console.log(`[PokemonModal] Selected 3D form:`, selected3DForm.value)
 
     // Load 2D forms (filter out the base/default form since we have a separate "Regular" option)
     const forms2D = await getAvailableFormsForPokemon(newId)
@@ -197,7 +211,7 @@ watch(() => props.pokemon?.id, async (newId) => {
     available2DForms.value = forms2D.filter(f => f.form_name !== '' && f.form_name !== props.pokemon?.name)
   }
   catch (error) {
-    console.error('Failed to load Pokemon forms:', error)
+    console.error('[PokemonModal] Failed to load Pokemon forms:', error)
     available3DForms.value = []
     available2DForms.value = []
     selected3DForm.value = null
@@ -259,7 +273,10 @@ onUnmounted(() => {
               class="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 p-2.5 sm:p-2 rounded-full bg-gray-900/50 hover:bg-gray-900/70 text-white transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
               @click="handleClose"
             >
-              <Icon icon="ph:x-bold" class="w-5 h-5 sm:w-6 sm:h-6" />
+              <Icon
+                icon="ph:x-bold"
+                class="w-5 h-5 sm:w-6 sm:h-6"
+              />
             </button>
 
             <!-- Navigation Arrows -->
@@ -267,45 +284,73 @@ onUnmounted(() => {
               v-if="hasPrevious"
               type="button"
               class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-3.5 rounded-full bg-gray-900/50 hover:bg-gray-900/70 text-white transition-all duration-200 hover:scale-110 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-              @click="navigatePrevious"
               aria-label="Previous Pokémon"
+              @click="navigatePrevious"
             >
-              <Icon icon="ph:caret-left-bold" class="w-6 h-6 sm:w-7 sm:h-7" />
+              <Icon
+                icon="ph:caret-left-bold"
+                class="w-6 h-6 sm:w-7 sm:h-7"
+              />
             </button>
 
             <button
               v-if="hasNext"
               type="button"
               class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-3.5 rounded-full bg-gray-900/50 hover:bg-gray-900/70 text-white transition-all duration-200 hover:scale-110 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-              @click="navigateNext"
               aria-label="Next Pokémon"
+              @click="navigateNext"
             >
-              <Icon icon="ph:caret-right-bold" class="w-6 h-6 sm:w-7 sm:h-7" />
+              <Icon
+                icon="ph:caret-right-bold"
+                class="w-6 h-6 sm:w-7 sm:h-7"
+              />
             </button>
 
             <!-- Modal Content -->
             <div class="p-4 sm:p-6 md:p-8">
-              <!-- Header -->
-              <div class="mb-4 sm:mb-6">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                  <!-- Left: ID + Name + Types -->
-                  <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                    <!-- ID Badge -->
-                    <span class="inline-flex items-center justify-center px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 w-fit">
-                      #{{ pokemon.id.toString().padStart(3, '0') }}
-                    </span>
+              <!-- Compact Inline Header with Gradient Background -->
+              <div class="relative -mx-4 sm:-mx-6 md:-mx-8 -mt-4 sm:-mt-6 md:-mt-8 mb-6 overflow-hidden rounded-b-2xl">
+                <!-- Dynamic Gradient Background based on Pokemon type -->
+                <div
+                  class="absolute inset-0 opacity-15 dark:opacity-25 bg-gradient-to-r"
+                  :style="{
+                    background: `linear-gradient(90deg, var(--type-${pokemon.types[0]}) 0%, var(--type-${pokemon.types[pokemon.types.length - 1]}) 100%)`,
+                  }"
+                />
 
-                    <!-- Name + Types -->
-                    <div class="flex flex-col gap-2">
-                      <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white capitalize leading-none">
+                <!-- Pattern Overlay -->
+                <div
+                  class="absolute inset-0 opacity-5"
+                  style="background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0); background-size: 32px 32px;"
+                />
+
+                <!-- Compact Content - Everything in one line -->
+                <div class="relative px-4 sm:px-6 md:px-8 py-4 sm:py-5">
+                  <div class="flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
+                    <!-- Left: Icon + ID + Name + Types (all inline) -->
+                    <div class="flex items-center gap-2 sm:gap-3 flex-wrap flex-1 min-w-0">
+                      <!-- ID Badge -->
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-md text-sm font-bold text-gray-900 dark:text-white flex-shrink-0">
+                        <Icon
+                          icon="ph:hash"
+                          class="w-3.5 h-3.5 opacity-50"
+                        />
+                        {{ pokemon.id.toString().padStart(3, '0') }}
+                      </span>
+
+                      <!-- Name -->
+                      <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 dark:text-white capitalize leading-none tracking-tight drop-shadow-lg flex-shrink-0">
                         {{ formatPokemonName(pokemon.name) }}
                       </h2>
+
+                      <!-- Types -->
                       <div class="flex items-center gap-1.5 sm:gap-2">
                         <PokemonTypeTag
                           v-for="type in pokemon.types"
                           :key="type"
                           :type="type"
                           size="md"
+                          class="shadow-md"
                         />
                       </div>
                     </div>
@@ -325,7 +370,10 @@ onUnmounted(() => {
                       :class="!show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
                       @click="show3D = false"
                     >
-                      <Icon icon="ph:image" class="w-5 h-5" />
+                      <Icon
+                        icon="ph:image"
+                        class="w-5 h-5"
+                      />
                       <span class="hidden sm:inline">2D</span>
                     </button>
                     <button
@@ -334,7 +382,10 @@ onUnmounted(() => {
                       :class="show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
                       @click="show3D = true"
                     >
-                      <Icon icon="ph:cube" class="w-5 h-5" />
+                      <Icon
+                        icon="ph:cube"
+                        class="w-5 h-5"
+                      />
                       <span class="hidden sm:inline">3D</span>
                     </button>
                   </div>
@@ -354,7 +405,10 @@ onUnmounted(() => {
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
                       @click="showShiny = !showShiny"
                     >
-                      <Icon icon="ph:sparkle-fill" class="w-5 h-5" />
+                      <Icon
+                        icon="ph:sparkle-fill"
+                        class="w-5 h-5"
+                      />
                       <span class="hidden sm:inline">Shiny</span>
                     </button>
 
@@ -364,7 +418,10 @@ onUnmounted(() => {
                       class="flex-1 md:flex-none px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center md:justify-start gap-2 text-sm font-medium min-h-[44px] bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       @click="playCry"
                     >
-                      <Icon icon="ph:speaker-high-bold" class="w-5 h-5" />
+                      <Icon
+                        icon="ph:speaker-high-bold"
+                        class="w-5 h-5"
+                      />
                       <span class="hidden sm:inline">Cry</span>
                     </button>
 
@@ -377,7 +434,10 @@ onUnmounted(() => {
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
                       @click="toggleFavorite"
                     >
-                      <Icon :icon="isFavorite ? 'ph:heart-fill' : 'ph:heart'" class="w-5 h-5" />
+                      <Icon
+                        :icon="isFavorite ? 'ph:heart-fill' : 'ph:heart'"
+                        class="w-5 h-5"
+                      />
                       <span class="hidden sm:inline">{{ isFavorite ? 'Team' : 'Add' }}</span>
                     </button>
                   </div>
@@ -386,12 +446,17 @@ onUnmounted(() => {
                   <div class="hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2" />
 
                   <!-- Form Selector Dropdown (2D Mode) -->
-                  <div v-if="!show3D" class="flex-1 md:flex-none">
+                  <div
+                    v-if="!show3D"
+                    class="flex-1 md:flex-none"
+                  >
                     <select
                       v-model="selected2DForm"
                       class="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium min-h-[44px]"
                     >
-                      <option :value="null">Regular</option>
+                      <option :value="null">
+                        Regular
+                      </option>
                       <option
                         v-for="form in available2DForms"
                         :key="form.name"
@@ -403,7 +468,10 @@ onUnmounted(() => {
                   </div>
 
                   <!-- Form Selector Dropdown (3D Mode) -->
-                  <div v-if="show3D && available3DForms.length > 0" class="flex-1 md:flex-none">
+                  <div
+                    v-if="show3D && available3DForms.length > 0"
+                    class="flex-1 md:flex-none"
+                  >
                     <select
                       v-model="selected3DForm"
                       class="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium min-h-[44px]"
@@ -421,77 +489,101 @@ onUnmounted(() => {
 
                 <!-- Right: Pokemon Image/Model -->
                 <div class="relative bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-xl sm:rounded-2xl p-6 sm:p-8 flex-1 min-h-[400px] sm:min-h-[500px]">
-
-                <!-- 2D Sprite View -->
-                <div v-if="!show3D" class="flex items-center justify-center h-full">
-                  <div class="relative inline-block">
-                    <img
-                      :src="currentSprite"
-                      :alt="pokemon.name"
-                      class="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] mx-auto object-contain drop-shadow-2xl transition-all duration-300"
-                    >
-                    <!-- Shiny sparkles for 2D -->
-                    <div
-                      v-if="showShiny"
-                      class="absolute inset-0 pointer-events-none"
-                    >
-                      <Icon
-                        icon="ph:sparkle-fill"
-                        class="absolute top-0 right-0 w-8 h-8 text-yellow-300 animate-ping"
-                      />
-                      <Icon
-                        icon="ph:sparkle-fill"
-                        class="absolute bottom-8 left-8 w-6 h-6 text-yellow-300 animate-ping"
-                        style="animation-delay: 0.3s"
-                      />
-                      <Icon
-                        icon="ph:sparkle-fill"
-                        class="absolute top-12 left-12 w-7 h-7 text-yellow-300 animate-ping"
-                        style="animation-delay: 0.6s"
-                      />
+                  <!-- 2D Sprite View -->
+                  <div
+                    v-if="!show3D"
+                    class="flex items-center justify-center h-full"
+                  >
+                    <div class="relative inline-block">
+                      <img
+                        :src="currentSprite"
+                        :alt="pokemon.name"
+                        class="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] mx-auto object-contain drop-shadow-2xl transition-all duration-300"
+                      >
+                      <!-- Shiny sparkles for 2D -->
+                      <div
+                        v-if="showShiny"
+                        class="absolute inset-0 pointer-events-none"
+                      >
+                        <Icon
+                          icon="ph:sparkle-fill"
+                          class="absolute top-0 right-0 w-8 h-8 text-yellow-300 animate-ping"
+                        />
+                        <Icon
+                          icon="ph:sparkle-fill"
+                          class="absolute bottom-8 left-8 w-6 h-6 text-yellow-300 animate-ping"
+                          style="animation-delay: 0.3s"
+                        />
+                        <Icon
+                          icon="ph:sparkle-fill"
+                          class="absolute top-12 left-12 w-7 h-7 text-yellow-300 animate-ping"
+                          style="animation-delay: 0.6s"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- 3D Model View -->
-                <div v-else class="flex items-center justify-center h-full">
-                  <ClientOnly>
-                    <Transition
-                      mode="out-in"
-                      enter-active-class="transition duration-300 ease-out"
-                      enter-from-class="opacity-0 scale-95"
-                      enter-to-class="opacity-100 scale-100"
-                      leave-active-class="transition duration-200 ease-in"
-                      leave-from-class="opacity-100 scale-100"
-                      leave-to-class="opacity-0 scale-95"
-                    >
-                      <Pokemon3DViewer
-                        v-if="selected3DForm"
-                        :key="selected3DForm.model"
-                        :pokemon-id="pokemon.id"
-                        :pokemon-name="pokemon.name"
-                        :model-url="selected3DForm.model"
-                        height="100%"
-                        :auto-rotate="true"
-                        :camera-controls="true"
-                        :show-form-toggle="false"
-                      />
-                    </Transition>
-                    <template #fallback>
-                      <div class="flex items-center justify-center h-full text-gray-500">
-                        <Icon icon="ph:circle-notch" class="w-8 h-8 animate-spin" />
-                      </div>
-                    </template>
-                  </ClientOnly>
-                </div>
+                  <!-- 3D Model View -->
+                  <div
+                    v-else
+                    class="flex items-center justify-center h-full"
+                  >
+                    <ClientOnly>
+                      <Transition
+                        mode="out-in"
+                        enter-active-class="transition duration-300 ease-out"
+                        enter-from-class="opacity-0 scale-95"
+                        enter-to-class="opacity-100 scale-100"
+                        leave-active-class="transition duration-200 ease-in"
+                        leave-from-class="opacity-100 scale-100"
+                        leave-to-class="opacity-0 scale-95"
+                      >
+                        <Pokemon3DViewer
+                          v-if="selected3DForm"
+                          :key="current3DFormName"
+                          :pokemon-id="pokemon.id"
+                          :pokemon-name="pokemon.name"
+                          :form="current3DFormName"
+                          height="100%"
+                          :auto-rotate="true"
+                          :camera-controls="true"
+                          :show-form-toggle="false"
+                        />
+                        <div
+                          v-else
+                          class="flex items-center justify-center h-full text-gray-500"
+                        >
+                          <Icon
+                            icon="ph:circle-notch"
+                            class="w-8 h-8 animate-spin"
+                          />
+                          <span class="ml-2">Loading 3D model...</span>
+                        </div>
+                      </Transition>
+                      <template #fallback>
+                        <div class="flex items-center justify-center h-full text-gray-500">
+                          <Icon
+                            icon="ph:circle-notch"
+                            class="w-8 h-8 animate-spin"
+                          />
+                        </div>
+                      </template>
+                    </ClientOnly>
+                  </div>
                 </div>
               </div>
 
               <!-- Tabs -->
-              <UiTabs v-model="activeTab" :tabs="tabs">
+              <UiTabs
+                v-model="activeTab"
+                :tabs="tabs"
+              >
                 <template #default="{ activeTab: currentTab }">
                   <!-- About Tab -->
-                  <div v-show="currentTab === 'about'" class="space-y-4 sm:space-y-6">
+                  <div
+                    v-show="currentTab === 'about'"
+                    class="space-y-4 sm:space-y-6"
+                  >
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <!-- Physical Info -->
                       <div class="space-y-4">
@@ -502,7 +594,10 @@ onUnmounted(() => {
                           <!-- Height -->
                           <div class="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
                             <div class="flex items-center gap-3">
-                              <Icon icon="ph:arrows-vertical-bold" class="w-5 h-5 text-blue-500" />
+                              <Icon
+                                icon="ph:arrows-vertical-bold"
+                                class="w-5 h-5 text-blue-500"
+                              />
                               <span class="font-medium text-gray-700 dark:text-gray-300">Height</span>
                             </div>
                             <span class="font-bold text-gray-900 dark:text-white">
@@ -513,7 +608,10 @@ onUnmounted(() => {
                           <!-- Weight -->
                           <div class="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
                             <div class="flex items-center gap-3">
-                              <Icon icon="ph:scales-bold" class="w-5 h-5 text-purple-500" />
+                              <Icon
+                                icon="ph:scales-bold"
+                                class="w-5 h-5 text-purple-500"
+                              />
                               <span class="font-medium text-gray-700 dark:text-gray-300">Weight</span>
                             </div>
                             <span class="font-bold text-gray-900 dark:text-white">
@@ -550,9 +648,16 @@ onUnmounted(() => {
                   </div>
 
                   <!-- Stats Tab -->
-                  <div v-show="currentTab === 'stats'" class="space-y-6">
+                  <div
+                    v-show="currentTab === 'stats'"
+                    class="space-y-6"
+                  >
                     <div class="space-y-4">
-                      <div v-for="(value, stat) in pokemon.stats" :key="stat" class="space-y-2">
+                      <div
+                        v-for="(value, stat) in pokemon.stats"
+                        :key="stat"
+                        class="space-y-2"
+                      >
                         <div class="flex items-center justify-between text-sm">
                           <span class="font-medium text-gray-700 dark:text-gray-300 capitalize">
                             {{ stat }}
@@ -584,9 +689,15 @@ onUnmounted(() => {
                   </div>
 
                   <!-- Evolution Tab -->
-                  <div v-show="currentTab === 'evolution'" class="space-y-6">
+                  <div
+                    v-show="currentTab === 'evolution'"
+                    class="space-y-6"
+                  >
                     <div class="p-8 rounded-xl bg-gray-100 dark:bg-gray-800 text-center">
-                      <Icon icon="ph:git-branch-bold" class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                      <Icon
+                        icon="ph:git-branch-bold"
+                        class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4"
+                      />
                       <p class="text-gray-600 dark:text-gray-400">
                         Evolution chain coming soon...
                       </p>
@@ -594,7 +705,6 @@ onUnmounted(() => {
                   </div>
                 </template>
               </UiTabs>
-
             </div>
           </div>
         </Transition>

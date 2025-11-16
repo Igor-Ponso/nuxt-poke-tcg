@@ -61,9 +61,11 @@ const tagClass = computed(() => {
   // Variant
   if (props.variant === 'filled') {
     baseClasses.push('text-white', 'shadow-sm')
-  } else if (props.variant === 'outlined') {
+  }
+  else if (props.variant === 'outlined') {
     baseClasses.push('bg-transparent', 'border-2')
-  } else if (props.variant === 'minimal') {
+  }
+  else if (props.variant === 'minimal') {
     baseClasses.push('bg-opacity-20')
   }
 
@@ -73,7 +75,7 @@ const tagClass = computed(() => {
       'cursor-pointer',
       'hover:scale-110',
       'hover:shadow-md',
-      'active:scale-95'
+      'active:scale-95',
     )
   }
 
@@ -90,12 +92,14 @@ const tagStyle = computed(() => {
     return {
       background: `linear-gradient(135deg, ${light}, ${dark})`,
     }
-  } else if (props.variant === 'outlined') {
+  }
+  else if (props.variant === 'outlined') {
     return {
       borderColor: dark,
       color: dark,
     }
-  } else if (props.variant === 'minimal') {
+  }
+  else if (props.variant === 'minimal') {
     return {
       backgroundColor: `${light}33`, // 20% opacity
       color: dark,

@@ -117,8 +117,14 @@ export function usePokemon3D() {
    * Returns complete form objects with names and model URLs
    */
   async function getAllForms(pokemonId: number): Promise<Pokemon3DModel[]> {
+    console.log(`[usePokemon3D] getAllForms called for Pokemon #${pokemonId}`)
     const pokemon = await fetchPokemon3D(pokemonId)
-    if (!pokemon) return []
+    console.log(`[usePokemon3D] fetchPokemon3D result:`, pokemon)
+    if (!pokemon) {
+      console.warn(`[usePokemon3D] No 3D model found for Pokemon #${pokemonId}`)
+      return []
+    }
+    console.log(`[usePokemon3D] Returning ${pokemon.forms.length} forms:`, pokemon.forms)
     return pokemon.forms
   }
 
@@ -175,7 +181,7 @@ export function usePokemon3D() {
     try {
       await $fetch(url, { method: 'HEAD' })
     }
-    catch (error) {
+    catch {
       console.warn('Failed to preload model:', url)
     }
   }
@@ -193,4 +199,3 @@ export function usePokemon3D() {
     preloadModel,
   }
 }
-

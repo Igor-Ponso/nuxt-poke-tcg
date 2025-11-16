@@ -49,10 +49,10 @@ const cardClass = computed(() => {
 
   // Rounded
   const roundedClasses = {
-    sm: 'rounded-sm',
-    md: 'rounded-md',
-    lg: 'rounded-lg',
-    xl: 'rounded-xl',
+    'sm': 'rounded-sm',
+    'md': 'rounded-md',
+    'lg': 'rounded-lg',
+    'xl': 'rounded-xl',
     '2xl': 'rounded-2xl',
     '3xl': 'rounded-3xl',
   }
@@ -113,7 +113,7 @@ const cardClass = computed(() => {
       'hover:shadow-xl',
       'hover:scale-[1.02]',
       'hover:border-gray-300',
-      'dark:hover:border-gray-600'
+      'dark:hover:border-gray-600',
     )
   }
 
@@ -128,7 +128,7 @@ const cardClass = computed(() => {
       'ring-2',
       'ring-blue-500',
       'border-blue-500',
-      'dark:border-blue-500'
+      'dark:border-blue-500',
     )
   }
 
@@ -186,7 +186,10 @@ function handleClick(event: MouseEvent | KeyboardEvent) {
     </div>
 
     <!-- Header slot -->
-    <div v-if="$slots.header" class="mb-4">
+    <div
+      v-if="$slots.header"
+      class="mb-4"
+    >
       <slot name="header" />
     </div>
 
@@ -196,7 +199,10 @@ function handleClick(event: MouseEvent | KeyboardEvent) {
     </div>
 
     <!-- Footer slot -->
-    <div v-if="$slots.footer" class="mt-4">
+    <div
+      v-if="$slots.footer"
+      class="mt-4"
+    >
       <slot name="footer" />
     </div>
 

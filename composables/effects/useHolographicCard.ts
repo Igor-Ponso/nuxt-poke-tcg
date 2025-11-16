@@ -30,7 +30,7 @@ export interface HolographicCardOptions {
 
 export function useHolographicCard(
   cardRef: Ref<HTMLElement | null>,
-  options: HolographicCardOptions = {}
+  options: HolographicCardOptions = {},
 ) {
   const {
     enabled = true,
@@ -99,7 +99,7 @@ export function useHolographicCard(
     oldMin: number,
     oldMax: number,
     newMin: number,
-    newMax: number
+    newMax: number,
   ): number {
     return ((value - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin
   }
@@ -137,13 +137,14 @@ export function useHolographicCard(
 
     // Continue animation if still moving
     if (
-      Math.abs(springState.velocity.x) > 0.01 ||
-      Math.abs(springState.velocity.y) > 0.01 ||
-      Math.abs(springState.rotate.x) > 0.01 ||
-      Math.abs(springState.rotate.y) > 0.01
+      Math.abs(springState.velocity.x) > 0.01
+      || Math.abs(springState.velocity.y) > 0.01
+      || Math.abs(springState.rotate.x) > 0.01
+      || Math.abs(springState.rotate.y) > 0.01
     ) {
       rafId = requestAnimationFrame(applySpring)
-    } else {
+    }
+    else {
       // Animation finished
       rafId = null
       springState.rotate.x = 0

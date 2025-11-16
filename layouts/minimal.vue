@@ -48,8 +48,8 @@ const layoutClass = computed(() => {
       >
         <UiToast
           v-for="toast in uiStore.toasts"
-          :key="toast.id"
           :id="toast.id"
+          :key="toast.id"
           :message="toast.message"
           :type="toast.type"
           :duration="toast.duration"

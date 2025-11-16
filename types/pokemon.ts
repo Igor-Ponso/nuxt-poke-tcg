@@ -205,10 +205,10 @@ export interface PokemonSprites {
 }
 
 export interface OtherPokemonSprites {
-  dream_world: DreamWorld
-  home: Home
+  'dream_world': DreamWorld
+  'home': Home
   'official-artwork': OfficialArtwork
-  showdown?: Showdown
+  'showdown'?: Showdown
 }
 
 export interface DreamWorld {
@@ -502,7 +502,7 @@ export interface PaginatedResponse<T> {
   results: T[]
 }
 
-export interface NamedAPIResourceList extends PaginatedResponse<NamedAPIResource> {}
+export type NamedAPIResourceList = PaginatedResponse<NamedAPIResource>
 
 // ============================================================================
 // CUSTOM APP TYPES (for our use)

@@ -32,7 +32,7 @@ const emit = defineEmits<{
  */
 const activeTab = computed({
   get: () => props.modelValue || props.tabs[0]?.id || '',
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 /**
@@ -65,7 +65,11 @@ function isActive(tabId: string): boolean {
         @click="selectTab(tab.id)"
       >
         <span class="flex items-center justify-center gap-2">
-          <Icon v-if="tab.icon" :icon="tab.icon" class="w-4 h-4" />
+          <Icon
+            v-if="tab.icon"
+            :icon="tab.icon"
+            class="w-4 h-4"
+          />
           <span>{{ tab.label }}</span>
         </span>
       </button>

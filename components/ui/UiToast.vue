@@ -203,7 +203,10 @@ onUnmounted(() => {
       aria-live="polite"
     >
       <!-- Icon -->
-      <div :class="iconClass" v-html="toastIcon" />
+      <div
+        :class="iconClass"
+        v-html="toastIcon"
+      />
 
       <!-- Message -->
       <div class="flex-1 text-sm font-medium">

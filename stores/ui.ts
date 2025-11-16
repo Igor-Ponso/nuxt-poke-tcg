@@ -16,7 +16,7 @@ interface Toast {
 interface Modal {
   id: string
   component: string
-  props?: Record<string, any>
+  props?: Record<string, unknown>
   onClose?: () => void
 }
 
@@ -115,7 +115,7 @@ export const useUIStore = defineStore('ui', {
     /**
      * Opens a modal
      */
-    openModal(component: string, props?: Record<string, any>, onClose?: () => void) {
+    openModal(component: string, props?: Record<string, unknown>, onClose?: () => void) {
       if (import.meta.client) {
         const modal: Modal = {
           id: `modal_${Date.now()}_${Math.random()}`,
@@ -170,7 +170,7 @@ export const useUIStore = defineStore('ui', {
     showToast(
       message: string,
       type: Toast['type'] = 'info',
-      duration = 3000
+      duration = 3000,
     ) {
       if (import.meta.client) {
         const toast: Toast = {

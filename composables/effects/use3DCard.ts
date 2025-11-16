@@ -21,13 +21,13 @@ export interface Card3DState {
   rotateX: Ref<number>
   rotateY: Ref<number>
   translateZ: Ref<number>
-  shine: Ref<{ x: number; y: number; opacity: number }>
+  shine: Ref<{ x: number, y: number, opacity: number }>
   isHovering: Ref<boolean>
 }
 
 export function use3DCard(
   elementRef: Ref<HTMLElement | null>,
-  options: Card3DOptions = {}
+  options: Card3DOptions = {},
 ) {
   const {
     maxRotate = 15,

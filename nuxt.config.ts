@@ -1,8 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
-
-  devtools: { enabled: true },
 
   modules: [
     '@nuxtjs/tailwindcss',
@@ -12,14 +9,23 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
   ],
 
-  css: ['~/assets/css/main.css'],
-
   components: [
     {
       path: '~/components',
       pathPrefix: false,
     },
   ],
+
+  imports: {
+    // Auto-import nested composables for better organization
+    dirs: [
+      'composables', // Top-level composables
+      'composables/*/index.ts', // Barrel exports
+      'composables/**', // All nested composables (core/, pokemon/, tcg/, effects/)
+    ],
+  },
+
+  devtools: { enabled: true },
 
   app: {
     head: {
@@ -32,7 +38,7 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
-          content: 'Modern Pokédex with TCG Mode - Explore Pokemon with beautiful holographic card effects'
+          content: 'Modern Pokédex with TCG Mode - Explore Pokemon with beautiful holographic card effects',
         },
         { name: 'format-detection', content: 'telephone=no' },
       ],
@@ -42,17 +48,36 @@ export default defineNuxtConfig({
     },
   },
 
-  typescript: {
-    strict: true,
-    typeCheck: true, // ✅ Enabled for production-ready code
-    shim: false,
-  },
+  css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
     public: {
       pokemonTcgApiKey: process.env.POKEMON_TCG_API_KEY || '',
       pokeApiUrl: 'https://pokeapi.co/api/v2',
       pokemonTcgApiUrl: 'https://api.pokemontcg.io/v2',
+    },
+  },
+  compatibilityDate: '2024-11-01',
+
+  vite: {
+    vue: {
+      template: {
+        compilerOptions: {
+          isCustomElement: tag => tag === 'model-viewer',
+        },
+      },
+    },
+  },
+
+  typescript: {
+    strict: true,
+    typeCheck: true, // ✅ Enabled for production-ready code
+    shim: false,
+  },
+
+  eslint: {
+    config: {
+      stylistic: true,
     },
   },
 
@@ -66,30 +91,5 @@ export default defineNuxtConfig({
     configPath: 'tailwind.config',
     exposeConfig: false,
     viewer: true,
-  },
-
-  eslint: {
-    config: {
-      stylistic: true,
-    },
-  },
-
-  vite: {
-    vue: {
-      template: {
-        compilerOptions: {
-          isCustomElement: (tag) => tag === 'model-viewer',
-        },
-      },
-    },
-  },
-
-  imports: {
-    // Auto-import nested composables for better organization
-    dirs: [
-      'composables',         // Top-level composables
-      'composables/*/index.ts', // Barrel exports
-      'composables/**',      // All nested composables (core/, pokemon/, tcg/, effects/)
-    ],
   },
 })

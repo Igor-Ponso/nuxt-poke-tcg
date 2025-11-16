@@ -15,7 +15,7 @@ import type { PokemonType } from '~/types'
 /**
  * Raw hex color values for each Pokemon type (light and dark variants)
  */
-export const TYPE_COLORS: Record<PokemonType, { light: string; dark: string }> = {
+export const TYPE_COLORS: Record<PokemonType, { light: string, dark: string }> = {
   normal: { light: '#dcdcdc', dark: '#a0a29f' },
   fire: { light: '#ffb971', dark: '#dc872f' },
   water: { light: '#85c8ff', dark: '#5090d6' },
@@ -43,7 +43,7 @@ export const TYPE_COLORS: Record<PokemonType, { light: string; dark: string }> =
 /**
  * Maps Pokemon types to Tailwind CSS classes
  */
-export const TYPE_TAILWIND_CLASSES: Record<PokemonType, { light: string; dark: string }> = {
+export const TYPE_TAILWIND_CLASSES: Record<PokemonType, { light: string, dark: string }> = {
   normal: { light: 'bg-poke-normal', dark: 'bg-poke-normal-dark' },
   fire: { light: 'bg-poke-fire', dark: 'bg-poke-fire-dark' },
   water: { light: 'bg-poke-water', dark: 'bg-poke-water-dark' },
@@ -89,7 +89,7 @@ export interface GradientConfig {
  */
 export function getTypeGradient(
   types: PokemonType[],
-  config: GradientConfig = {}
+  config: GradientConfig = {},
 ): string {
   const { direction = '135deg', stops } = config
 
@@ -122,7 +122,7 @@ export function getTypeGradient(
  */
 export function getTypeGradientStyle(
   types: PokemonType[],
-  direction = '135deg'
+  direction = '135deg',
 ): { backgroundImage: string } {
   return {
     backgroundImage: getTypeGradient(types, { direction }),
@@ -138,7 +138,7 @@ export function getTypeGradientStyle(
  */
 export function getTypeTailwindClass(
   type: PokemonType,
-  variant: 'light' | 'dark' = 'light'
+  variant: 'light' | 'dark' = 'light',
 ): string {
   return TYPE_TAILWIND_CLASSES[type][variant]
 }
@@ -150,7 +150,7 @@ export function getTypeTailwindClass(
 /**
  * Converts hex color to RGB values
  */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+export function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? {
@@ -239,7 +239,7 @@ export function darkenColor(hex: string, percent: number): string {
  */
 export function getHolographicGradient(
   rotation = 0,
-  intensity = 1
+  intensity = 1,
 ): string {
   const hue1 = (rotation + 0) % 360
   const hue2 = (rotation + 60) % 360

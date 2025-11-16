@@ -207,7 +207,7 @@ export const useTCGStore = defineStore('tcg', {
     /**
      * Searches cards
      */
-    async searchCards(params: { name?: string; page?: number; pageSize?: number; rarity?: TCGRarity; set?: string } = {}) {
+    async searchCards(params: { name?: string, page?: number, pageSize?: number, rarity?: TCGRarity, set?: string } = {}) {
       const { name, page = 1, pageSize = 20, rarity, set } = params
 
       if (name) {
@@ -375,7 +375,7 @@ export const useTCGStore = defineStore('tcg', {
 
           const holoType = localStorage.getItem('holographic_type')
           if (holoType) {
-            this.holographicType = holoType as any
+            this.holographicType = holoType as 'standard' | 'reverse' | 'cosmos' | 'radial' | 'prism'
           }
         }
         catch (error) {

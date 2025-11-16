@@ -94,21 +94,33 @@ function handleClick() {
           >
 
           <!-- Holographic shine layer (3 layers: base, :before, :after) -->
-          <div v-if="holographicEnabled" class="tcg-card__shine" />
+          <div
+            v-if="holographicEnabled"
+            class="tcg-card__shine"
+          />
 
           <!-- Glare/reflection layer -->
-          <div v-if="holographicEnabled" class="tcg-card__glare" />
+          <div
+            v-if="holographicEnabled"
+            class="tcg-card__glare"
+          />
         </div>
       </div>
     </div>
 
     <!-- Card info overlay (shown on hover) -->
     <Transition name="fade">
-      <div v-if="isInteractive" class="tcg-card__info">
+      <div
+        v-if="isInteractive"
+        class="tcg-card__info"
+      >
         <p class="font-bold text-white text-sm truncate">
           {{ card.name }}
         </p>
-        <p v-if="card.rarity" class="text-xs text-white/80">
+        <p
+          v-if="card.rarity"
+          class="text-xs text-white/80"
+        >
           {{ card.rarity }}
         </p>
       </div>

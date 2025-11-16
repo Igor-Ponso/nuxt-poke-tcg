@@ -35,8 +35,8 @@ export function toTitleCase(str: string): string {
     'mr-mime': 'Mr. Mime',
     'mr-rime': 'Mr. Rime',
     'mime-jr': 'Mime Jr.',
-    'farfetchd': "Farfetch'd",
-    'sirfetchd': "Sirfetch'd",
+    'farfetchd': 'Farfetch\'d',
+    'sirfetchd': 'Sirfetch\'d',
     'porygon-z': 'Porygon-Z',
     'type-null': 'Type: Null',
     'jangmo-o': 'Jangmo-o',
@@ -228,12 +228,12 @@ export function calculateTotalStats(stats: {
   speed: number
 }): number {
   return (
-    stats.hp +
-    stats.attack +
-    stats.defense +
-    stats.specialAttack +
-    stats.specialDefense +
-    stats.speed
+    stats.hp
+    + stats.attack
+    + stats.defense
+    + stats.specialAttack
+    + stats.specialDefense
+    + stats.speed
   )
 }
 

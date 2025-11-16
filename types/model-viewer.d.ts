@@ -3,14 +3,14 @@
  */
 
 declare module '@google/model-viewer' {
-  const ModelViewer: any
+  const ModelViewer: unknown
   export default ModelViewer
 }
 
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'model-viewer': any
+      'model-viewer': Record<string, unknown>
     }
   }
 }

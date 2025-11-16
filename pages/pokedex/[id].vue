@@ -54,17 +54,34 @@ function toggleShiny() {
 </script>
 
 <template>
-  <div v-if="pokemonStore.loading" class="flex items-center justify-center py-20">
-    <UiLoading type="pokeball" size="xl" message="Loading Pokémon..." />
+  <div
+    v-if="pokemonStore.loading"
+    class="flex items-center justify-center py-20"
+  >
+    <UiLoading
+      type="pokeball"
+      size="xl"
+      message="Loading Pokémon..."
+    />
   </div>
 
-  <div v-else-if="pokemon" class="space-y-8">
+  <div
+    v-else-if="pokemon"
+    class="space-y-8"
+  >
     <!-- Header -->
     <div class="flex items-start justify-between">
       <div>
         <div class="flex items-center gap-3 mb-2">
-          <UiButton variant="ghost" size="sm" @click="navigateTo('/pokedex')">
-            <Icon icon="ph:arrow-left" class="w-4 h-4 mr-1" />
+          <UiButton
+            variant="ghost"
+            size="sm"
+            @click="navigateTo('/pokedex')"
+          >
+            <Icon
+              icon="ph:arrow-left"
+              class="w-4 h-4 mr-1"
+            />
             Back
           </UiButton>
           <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -88,7 +105,10 @@ function toggleShiny() {
           :variant="isFavorite ? 'danger' : 'secondary'"
           @click="toggleFavorite"
         >
-          <Icon :icon="isFavorite ? 'ph:heart-fill' : 'ph:heart'" class="w-5 h-5 mr-2" />
+          <Icon
+            :icon="isFavorite ? 'ph:heart-fill' : 'ph:heart'"
+            class="w-5 h-5 mr-2"
+          />
           {{ isFavorite ? 'Remove from' : 'Add to' }} Team
         </UiButton>
       </div>
@@ -97,7 +117,11 @@ function toggleShiny() {
     <!-- Main Content -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- Image / 3D Model Viewer -->
-      <UiCard variant="glass" padding="lg" class="relative">
+      <UiCard
+        variant="glass"
+        padding="lg"
+        class="relative"
+      >
         <!-- View Toggle Buttons -->
         <div class="absolute top-4 right-4 z-20 flex gap-2">
           <button
@@ -106,7 +130,10 @@ function toggleShiny() {
             :class="!show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
             @click="show3D = false"
           >
-            <Icon icon="ph:image" class="w-5 h-5" />
+            <Icon
+              icon="ph:image"
+              class="w-5 h-5"
+            />
             2D
           </button>
           <button
@@ -115,7 +142,10 @@ function toggleShiny() {
             :class="show3D ? 'bg-blue-500 text-white shadow-lg' : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
             @click="show3D = true"
           >
-            <Icon icon="ph:cube" class="w-5 h-5" />
+            <Icon
+              icon="ph:cube"
+              class="w-5 h-5"
+            />
             3D
           </button>
         </div>
@@ -130,13 +160,19 @@ function toggleShiny() {
               : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'"
             @click="toggleShiny"
           >
-            <Icon icon="ph:sparkle-fill" class="w-5 h-5" />
+            <Icon
+              icon="ph:sparkle-fill"
+              class="w-5 h-5"
+            />
             Shiny
           </button>
         </div>
 
         <!-- 2D Sprite View -->
-        <div v-if="!show3D" class="text-center py-8">
+        <div
+          v-if="!show3D"
+          class="text-center py-8"
+        >
           <div class="relative inline-block">
             <img
               :src="currentSprite"
@@ -168,7 +204,10 @@ function toggleShiny() {
         </div>
 
         <!-- 3D Model View -->
-        <div v-else class="min-h-[400px]">
+        <div
+          v-else
+          class="min-h-[400px]"
+        >
           <ClientOnly>
             <Pokemon3DViewer
               :pokemon-id="pokemon.id"
@@ -179,7 +218,10 @@ function toggleShiny() {
             />
             <template #fallback>
               <div class="flex items-center justify-center h-[400px] text-gray-500">
-                <Icon icon="ph:circle-notch" class="w-8 h-8 animate-spin" />
+                <Icon
+                  icon="ph:circle-notch"
+                  class="w-8 h-8 animate-spin"
+                />
               </div>
             </template>
           </ClientOnly>
@@ -187,12 +229,19 @@ function toggleShiny() {
       </UiCard>
 
       <!-- Stats -->
-      <UiCard variant="glass" padding="lg">
+      <UiCard
+        variant="glass"
+        padding="lg"
+      >
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Base Stats
         </h2>
         <div class="space-y-3">
-          <div v-for="(value, stat) in pokemon.stats" :key="stat" class="space-y-1">
+          <div
+            v-for="(value, stat) in pokemon.stats"
+            :key="stat"
+            class="space-y-1"
+          >
             <div class="flex items-center justify-between text-sm">
               <span class="font-medium text-gray-700 dark:text-gray-300 capitalize">
                 {{ stat }}
@@ -213,11 +262,18 @@ function toggleShiny() {
     </div>
   </div>
 
-  <div v-else class="text-center py-20">
+  <div
+    v-else
+    class="text-center py-20"
+  >
     <p class="text-xl text-gray-600 dark:text-gray-400">
       Pokémon not found
     </p>
-    <UiButton variant="primary" class="mt-4" @click="navigateTo('/pokedex')">
+    <UiButton
+      variant="primary"
+      class="mt-4"
+      @click="navigateTo('/pokedex')"
+    >
       Back to Pokédex
     </UiButton>
   </div>

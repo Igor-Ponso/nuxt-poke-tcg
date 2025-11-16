@@ -5,6 +5,8 @@
  * Supports searching by form types (mega, gmax, alolan, galarian, etc.)
  */
 
+import type { Pokemon } from '~/types'
+
 export interface PokemonFormName {
   language: {
     name: string
@@ -99,7 +101,6 @@ export function usePokemonForms() {
     }
   }
 
-
   /**
    * Get English form name from form_names array
    */
@@ -118,7 +119,7 @@ export function usePokemonForms() {
     const normalizedKeyword = keyword.toLowerCase().trim()
 
     // Filter forms that match the keyword
-    const matchingForms = allForms.results.filter(formResult => {
+    const matchingForms = allForms.results.filter((formResult) => {
       const formName = formResult.name.toLowerCase()
 
       // Extract base Pokemon name (before first hyphen)
@@ -139,14 +140,14 @@ export function usePokemonForms() {
       // - "galarian" matches: ponyta-galar, rapidash-galar, slowpoke-galar
 
       return (
-        formName.includes(`-${normalizedKeyword}`) ||
+        formName.includes(`-${normalizedKeyword}`)
         // Handle variations
-        (normalizedKeyword === 'alolan' && formName.includes('-alola')) ||
-        (normalizedKeyword === 'galarian' && formName.includes('-galar')) ||
-        (normalizedKeyword === 'hisuian' && formName.includes('-hisui')) ||
-        (normalizedKeyword === 'paldean' && formName.includes('-paldea')) ||
-        (normalizedKeyword === 'gmax' && formName.includes('-gmax')) ||
-        (normalizedKeyword === 'gigantamax' && formName.includes('-gmax'))
+        || (normalizedKeyword === 'alolan' && formName.includes('-alola'))
+        || (normalizedKeyword === 'galarian' && formName.includes('-galar'))
+        || (normalizedKeyword === 'hisuian' && formName.includes('-hisui'))
+        || (normalizedKeyword === 'paldean' && formName.includes('-paldea'))
+        || (normalizedKeyword === 'gmax' && formName.includes('-gmax'))
+        || (normalizedKeyword === 'gigantamax' && formName.includes('-gmax'))
       )
     })
 
@@ -226,7 +227,7 @@ export function usePokemonForms() {
       const baseName = basePokemon.name
 
       // Find all forms that belong to this Pokemon
-      const pokemonForms = allForms.results.filter(formResult => {
+      const pokemonForms = allForms.results.filter((formResult) => {
         // Extract base name from form name (e.g., "charizard-mega-x" -> "charizard")
         const formBaseName = formResult.name.split('-')[0]
         return formBaseName === baseName
@@ -250,14 +251,14 @@ export function usePokemonForms() {
                 const pokemonId = pokemonIdMatch ? parseInt(pokemonIdMatch[1], 10) : null
 
                 if (pokemonId) {
-                  const pokemonData = await $fetch<any>(`${BASE_URL}/pokemon/${pokemonId}`)
+                  const pokemonData = await $fetch<Pokemon>(`${BASE_URL}/pokemon/${pokemonId}`)
                   // Merge official artwork into form sprites if available
                   if (pokemonData.sprites?.other?.['official-artwork']) {
                     form.sprites.other = pokemonData.sprites.other
                   }
                 }
               }
-              catch (artworkError) {
+              catch {
                 // Fallback to form sprites if pokemon endpoint fails
                 console.warn(`Could not fetch official artwork for form ${form.name}`)
               }

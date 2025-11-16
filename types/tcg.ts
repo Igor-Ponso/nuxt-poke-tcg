@@ -135,9 +135,9 @@ export interface TCGPlayerData {
 }
 
 export interface TCGPlayerPrices {
-  normal?: TCGPrice
-  holofoil?: TCGPrice
-  reverseHolofoil?: TCGPrice
+  'normal'?: TCGPrice
+  'holofoil'?: TCGPrice
+  'reverseHolofoil'?: TCGPrice
   '1stEditionHolofoil'?: TCGPrice
   '1stEditionNormal'?: TCGPrice
 }
@@ -190,10 +190,10 @@ export interface TCGResponse<T> {
   totalCount?: number
 }
 
-export interface TCGCardResponse extends TCGResponse<TCGCard> {}
-export interface TCGCardsResponse extends TCGResponse<TCGCard[]> {}
-export interface TCGSetResponse extends TCGResponse<TCGSet> {}
-export interface TCGSetsResponse extends TCGResponse<TCGSet[]> {}
+export type TCGCardResponse = TCGResponse<TCGCard>
+export type TCGCardsResponse = TCGResponse<TCGCard[]>
+export type TCGSetResponse = TCGResponse<TCGSet>
+export type TCGSetsResponse = TCGResponse<TCGSet[]>
 
 // ============================================================================
 // TCG RARITIES (for filtering/display)

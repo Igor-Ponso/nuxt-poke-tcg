@@ -163,7 +163,10 @@ function handleClick(event: MouseEvent) {
     </span>
 
     <!-- Button content -->
-    <span v-if="!loading || $slots.default" class="inline-flex items-center">
+    <span
+      v-if="!loading || $slots.default"
+      class="inline-flex items-center"
+    >
       <slot />
     </span>
 

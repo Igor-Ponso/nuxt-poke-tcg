@@ -6,7 +6,7 @@
  */
 
 import { defineStore } from 'pinia'
-import type { SimplifiedPokemon, PokemonCardData } from '~/types'
+import type { SimplifiedPokemon, PokemonCardData, PokemonType } from '~/types'
 
 interface PokemonState {
   // Pokemon list
@@ -71,14 +71,14 @@ export const usePokemonStore = defineStore('pokemon', {
         const gen = getGenerationByName(`Generation ${state.selectedGeneration}`)
         if (gen) {
           filtered = filtered.filter(
-            p => p.id >= gen.range.start && p.id <= gen.range.end
+            p => p.id >= gen.range.start && p.id <= gen.range.end,
           )
         }
       }
 
       // Filter by type
       if (state.selectedType) {
-        filtered = filtered.filter(p => p.types.includes(state.selectedType as any))
+        filtered = filtered.filter(p => p.types.includes(state.selectedType as PokemonType))
       }
 
       // DO NOT filter by searchQuery here!
@@ -141,7 +141,7 @@ export const usePokemonStore = defineStore('pokemon', {
             const id = extractIdFromUrl(p.url)
             const pokemon = await api.fetchPokemon(id)
             return api.simplifyPokemon(pokemon)
-          })
+          }),
         )
 
         // Append to existing list or replace based on page
@@ -179,7 +179,7 @@ export const usePokemonStore = defineStore('pokemon', {
         const api = usePokemonApi()
         const ids = Array.from(
           { length: gen.range.end - gen.range.start + 1 },
-          (_, i) => gen.range.start + i
+          (_, i) => gen.range.start + i,
         )
 
         // Fetch in batches of 20

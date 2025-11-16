@@ -132,7 +132,10 @@ function navigateToSection(section: typeof navigationSections[0]) {
             :disabled="!searchQuery.trim()"
             @click="handleSearch"
           >
-            <Icon icon="ph:magnifying-glass-bold" class="w-5 h-5 sm:w-6 sm:h-6" />
+            <Icon
+              icon="ph:magnifying-glass-bold"
+              class="w-5 h-5 sm:w-6 sm:h-6"
+            />
           </button>
         </div>
       </div>
@@ -160,7 +163,10 @@ function navigateToSection(section: typeof navigationSections[0]) {
               class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br"
               :class="section.color"
             >
-              <Icon :icon="section.icon" class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <Icon
+                :icon="section.icon"
+                class="w-6 h-6 sm:w-7 sm:h-7 text-white"
+              />
             </div>
 
             <!-- Text -->

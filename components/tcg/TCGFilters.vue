@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 import type { TCGRarity } from '~/types'
 
 const emit = defineEmits<{
-  filter: [filters: { rarity?: TCGRarity; set?: string }]
+  filter: [filters: { rarity?: TCGRarity, set?: string }]
 }>()
 
 const selectedRarity = ref('')
@@ -49,9 +49,15 @@ const hasActiveFilters = computed(() => selectedRarity.value || selectedSet.valu
       class="px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-900 dark:text-white transition-all flex items-center gap-2"
       @click="showFilters = !showFilters"
     >
-      <Icon icon="ph:funnel-bold" class="w-5 h-5" />
+      <Icon
+        icon="ph:funnel-bold"
+        class="w-5 h-5"
+      />
       <span>Filters</span>
-      <span v-if="hasActiveFilters" class="ml-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-xs font-medium">
+      <span
+        v-if="hasActiveFilters"
+        class="ml-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-xs font-medium"
+      >
         {{ [selectedRarity, selectedSet].filter(Boolean).length }}
       </span>
     </button>
@@ -81,7 +87,11 @@ const hasActiveFilters = computed(() => selectedRarity.value || selectedSet.valu
             <option value="">
               All Rarities
             </option>
-            <option v-for="rarity in rarities" :key="rarity" :value="rarity">
+            <option
+              v-for="rarity in rarities"
+              :key="rarity"
+              :value="rarity"
+            >
               {{ rarity }}
             </option>
           </select>

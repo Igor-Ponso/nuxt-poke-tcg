@@ -79,7 +79,7 @@ function getFormLabel(form: PokemonForm): string {
   const englishName = getEnglishFormName(form)
 
   // If it's the base form, just show "Regular"
-  if (form.form_name === '' || !form.is_mega && !form.form_name) {
+  if (form.form_name === '' || (!form.is_mega && !form.form_name)) {
     return 'Regular'
   }
 
@@ -143,7 +143,10 @@ const hasSpecialForms = computed(() => {
 </script>
 
 <template>
-  <div v-if="hasSpecialForms" class="form-selector relative">
+  <div
+    v-if="hasSpecialForms"
+    class="form-selector relative"
+  >
     <!-- Trigger button -->
     <button
       type="button"
@@ -173,12 +176,18 @@ const hasSpecialForms = computed(() => {
         @click.stop
       >
         <!-- Loading state -->
-        <div v-if="isLoading" class="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+        <div
+          v-if="isLoading"
+          class="p-4 text-center text-gray-500 dark:text-gray-400 text-sm"
+        >
           Loading forms...
         </div>
 
         <!-- Forms list -->
-        <div v-else class="max-h-64 overflow-y-auto">
+        <div
+          v-else
+          class="max-h-64 overflow-y-auto"
+        >
           <!-- Reset to base form -->
           <button
             type="button"
@@ -186,7 +195,10 @@ const hasSpecialForms = computed(() => {
             :class="!currentForm ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'"
             @click="resetForm"
           >
-            <Icon icon="ph:circle" class="w-5 h-5 flex-shrink-0" />
+            <Icon
+              icon="ph:circle"
+              class="w-5 h-5 flex-shrink-0"
+            />
             <span class="text-sm font-medium">Regular</span>
           </button>
 
@@ -199,7 +211,10 @@ const hasSpecialForms = computed(() => {
             :class="currentForm === form.name ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'"
             @click="selectForm(form)"
           >
-            <Icon :icon="getFormIcon(form)" class="w-5 h-5 flex-shrink-0" />
+            <Icon
+              :icon="getFormIcon(form)"
+              class="w-5 h-5 flex-shrink-0"
+            />
             <span class="text-sm font-medium">{{ getFormLabel(form) }}</span>
           </button>
         </div>

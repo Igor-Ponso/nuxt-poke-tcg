@@ -89,7 +89,10 @@ function selectGeneration(genId: number) {
       >
         <div class="space-y-1.5 sm:space-y-2 text-center">
           <div class="flex items-center justify-center">
-            <Icon icon="ph:infinity-bold" class="w-8 h-8 sm:w-10 sm:h-10 text-gray-600 dark:text-gray-400" />
+            <Icon
+              icon="ph:infinity-bold"
+              class="w-8 h-8 sm:w-10 sm:h-10 text-gray-600 dark:text-gray-400"
+            />
           </div>
           <div class="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
             All Gens
@@ -158,7 +161,10 @@ function selectGeneration(genId: number) {
             v-if="modelValue === gen.id"
             class="absolute top-2 right-2 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-lg"
           >
-            <Icon icon="ph:check-bold" class="w-4 h-4 text-white" />
+            <Icon
+              icon="ph:check-bold"
+              class="w-4 h-4 text-white"
+            />
           </div>
         </Transition>
       </button>

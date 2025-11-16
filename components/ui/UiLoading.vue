@@ -36,7 +36,7 @@ const containerClass = computed(() => {
       'z-50',
       'bg-white/80',
       'dark:bg-gray-900/80',
-      'backdrop-blur-sm'
+      'backdrop-blur-sm',
     )
   }
 
@@ -143,10 +143,16 @@ const pokeballSize = computed(() => {
 <template>
   <div :class="containerClass">
     <!-- Spinner type -->
-    <div v-if="type === 'spinner'" :class="spinnerClass" />
+    <div
+      v-if="type === 'spinner'"
+      :class="spinnerClass"
+    />
 
     <!-- Dots type -->
-    <div v-else-if="type === 'dots'" class="flex gap-2">
+    <div
+      v-else-if="type === 'dots'"
+      class="flex gap-2"
+    >
       <div
         :class="dotClass"
         class="animate-bounce"
@@ -165,7 +171,10 @@ const pokeballSize = computed(() => {
     </div>
 
     <!-- Pulse type -->
-    <div v-else-if="type === 'pulse'" :class="pulseClass" />
+    <div
+      v-else-if="type === 'pulse'"
+      :class="pulseClass"
+    />
 
     <!-- Pokeball type -->
     <div
@@ -200,13 +209,33 @@ const pokeballSize = computed(() => {
         />
 
         <!-- Middle band (black) -->
-        <rect x="5" y="45" width="90" height="10" fill="#1F2937" />
+        <rect
+          x="5"
+          y="45"
+          width="90"
+          height="10"
+          fill="#1F2937"
+        />
 
         <!-- Center circle (white) -->
-        <circle cx="50" cy="50" r="15" fill="#F3F4F6" stroke="#1F2937" stroke-width="3" />
+        <circle
+          cx="50"
+          cy="50"
+          r="15"
+          fill="#F3F4F6"
+          stroke="#1F2937"
+          stroke-width="3"
+        />
 
         <!-- Center circle inner (white) -->
-        <circle cx="50" cy="50" r="8" fill="white" stroke="#1F2937" stroke-width="2" />
+        <circle
+          cx="50"
+          cy="50"
+          r="8"
+          fill="white"
+          stroke="#1F2937"
+          stroke-width="2"
+        />
       </svg>
     </div>
 

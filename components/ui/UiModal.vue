@@ -33,9 +33,9 @@ const props = withDefaults(defineProps<UiModalProps>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  open: []
-  close: []
-  clickOutside: []
+  'open': []
+  'close': []
+  'clickOutside': []
 }>()
 
 const modalRef = ref<HTMLElement | null>(null)
@@ -56,7 +56,8 @@ const modalWrapperClass = computed(() => {
 
   if (props.centered) {
     classes.push('items-center', 'justify-center')
-  } else {
+  }
+  else {
     classes.push('items-start', 'justify-center', 'pt-20')
   }
 
@@ -139,7 +140,7 @@ function trapFocus(event: KeyboardEvent) {
   if (event.key !== 'Tab' || !modalRef.value) return
 
   const focusableElements = modalRef.value.querySelectorAll<HTMLElement>(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
   )
 
   const firstElement = focusableElements[0]
@@ -151,7 +152,8 @@ function trapFocus(event: KeyboardEvent) {
         event.preventDefault()
         lastElement?.focus()
       }
-    } else {
+    }
+    else {
       if (document.activeElement === lastElement) {
         event.preventDefault()
         firstElement?.focus()
@@ -172,11 +174,12 @@ watch(isOpen, (value) => {
       // Focus first focusable element
       nextTick(() => {
         const firstFocusable = modalRef.value?.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         )
         firstFocusable?.focus()
       })
-    } else {
+    }
+    else {
       // Restore body scroll
       document.body.style.overflow = ''
     }
@@ -262,7 +265,7 @@ onUnmounted(() => {
           <div
             :class="[
               'px-6 py-4',
-              scrollable ? 'overflow-y-auto flex-1' : ''
+              scrollable ? 'overflow-y-auto flex-1' : '',
             ]"
           >
             <slot />

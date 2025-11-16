@@ -48,7 +48,7 @@ const currentForm = ref(props.form)
 const isLoading = ref(true)
 const hasError = ref(false)
 const errorMessage = ref('')
-const modelViewerRef = ref<any>(null)
+const modelViewerRef = ref<HTMLElement | null>(null)
 // Use 'auto' for automatic framing based on model dimensions
 const cameraOrbit = ref('0deg 75deg auto')
 
@@ -81,16 +81,22 @@ function handleLoad() {
   hasError.value = false
 
   if (modelViewerRef.value) {
-    const modelViewer = modelViewerRef.value
+    // Type cast to access model-viewer specific properties
+    const modelViewer = modelViewerRef.value as unknown as {
+      availableAnimations?: string[]
+      animationName?: string
+      play: (options: { repetitions: number }) => void
+    }
 
     // Use requestAnimationFrame to avoid setting properties during Lit's update cycle
     // This prevents the "change-in-update" warning
     requestAnimationFrame(() => {
       // Model-viewer handles auto-framing with camera-orbit="auto"
       // Check if model has animations and handle them if autoplay is enabled
-      if (props.autoplayAnimation && modelViewer.availableAnimations?.length > 0) {
+      const animations = modelViewer.availableAnimations
+      if (props.autoplayAnimation && animations && animations.length > 0) {
         // Model has animations - play the first one
-        modelViewer.animationName = modelViewer.availableAnimations[0]
+        modelViewer.animationName = animations[0]
         modelViewer.play({ repetitions: Infinity })
       }
       // If no animations available, model will remain static (which is fine)
@@ -128,7 +134,11 @@ watch(() => props.pokemonId, () => {
       v-if="isLoading"
       class="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm rounded-2xl z-10"
     >
-      <UiLoading type="pokeball" size="lg" message="Loading 3D model..." />
+      <UiLoading
+        type="pokeball"
+        size="lg"
+        message="Loading 3D model..."
+      />
     </div>
 
     <!-- Error State -->
@@ -136,7 +146,10 @@ watch(() => props.pokemonId, () => {
       v-if="hasError"
       class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/50 backdrop-blur-sm rounded-2xl z-10 p-6 text-center"
     >
-      <Icon icon="ph:warning-circle-fill" class="w-16 h-16 text-yellow-500 mb-4" />
+      <Icon
+        icon="ph:warning-circle-fill"
+        class="w-16 h-16 text-yellow-500 mb-4"
+      />
       <p class="text-white text-lg font-semibold mb-2">
         {{ errorMessage }}
       </p>
@@ -171,8 +184,15 @@ watch(() => props.pokemonId, () => {
       @error="handleError"
     >
       <!-- Loading slot -->
-      <div slot="poster" class="flex items-center justify-center w-full h-full bg-gray-800/50">
-        <UiLoading type="pokeball" size="md" />
+      <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+      <div
+        slot="poster"
+        class="flex items-center justify-center w-full h-full bg-gray-800/50"
+      >
+        <UiLoading
+          type="pokeball"
+          size="md"
+        />
       </div>
     </model-viewer>
 
@@ -201,7 +221,10 @@ watch(() => props.pokemonId, () => {
 
     <!-- Controls Info -->
     <div class="absolute bottom-4 left-4 z-20 text-white/70 text-xs backdrop-blur-sm bg-black/30 px-3 py-2 rounded-lg">
-      <Icon icon="ph:mouse" class="w-4 h-4 inline mr-1" />
+      <Icon
+        icon="ph:mouse"
+        class="w-4 h-4 inline mr-1"
+      />
       Drag to rotate • Scroll to zoom
     </div>
   </div>

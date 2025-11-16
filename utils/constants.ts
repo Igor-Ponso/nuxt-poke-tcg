@@ -246,21 +246,21 @@ export const POKEMON_TYPES: TypeInfo[] = [
 // ============================================================================
 
 export const STAT_NAMES = {
-  hp: 'HP',
-  attack: 'Attack',
-  defense: 'Defense',
+  'hp': 'HP',
+  'attack': 'Attack',
+  'defense': 'Defense',
   'special-attack': 'Sp. Atk',
   'special-defense': 'Sp. Def',
-  speed: 'Speed',
+  'speed': 'Speed',
 } as const
 
 export const STAT_ABBREVIATIONS = {
-  hp: 'HP',
-  attack: 'ATK',
-  defense: 'DEF',
+  'hp': 'HP',
+  'attack': 'ATK',
+  'defense': 'DEF',
   'special-attack': 'SPATK',
   'special-defense': 'SPDEF',
-  speed: 'SPD',
+  'speed': 'SPD',
 } as const
 
 // ============================================================================
@@ -384,7 +384,7 @@ export const UI_CONFIG = {
  */
 export function getGenerationByPokemonId(id: number): Generation | undefined {
   return GENERATIONS.find(
-    gen => id >= gen.range.start && id <= gen.range.end
+    gen => id >= gen.range.start && id <= gen.range.end,
   )
 }
 
@@ -393,8 +393,8 @@ export function getGenerationByPokemonId(id: number): Generation | undefined {
  */
 export function getGenerationByName(name: string): Generation | undefined {
   return GENERATIONS.find(
-    gen => gen.name.toLowerCase() === name.toLowerCase() ||
-           gen.region.toLowerCase() === name.toLowerCase()
+    gen => gen.name.toLowerCase() === name.toLowerCase()
+      || gen.region.toLowerCase() === name.toLowerCase(),
   )
 }
 

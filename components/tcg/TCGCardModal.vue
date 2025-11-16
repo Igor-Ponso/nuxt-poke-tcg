@@ -56,7 +56,10 @@ function handleBackdropClick(event: MouseEvent) {
               class="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-900/50 hover:bg-gray-900/70 text-white transition-colors"
               @click="handleClose"
             >
-              <Icon icon="ph:x-bold" class="w-6 h-6" />
+              <Icon
+                icon="ph:x-bold"
+                class="w-6 h-6"
+              />
             </button>
 
             <!-- Modal Content -->
@@ -95,7 +98,10 @@ function handleBackdropClick(event: MouseEvent) {
                   </div>
 
                   <!-- Rarity -->
-                  <div v-if="card.rarity" class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
+                  <div
+                    v-if="card.rarity"
+                    class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800"
+                  >
                     <div class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                       Rarity
                     </div>
@@ -105,7 +111,10 @@ function handleBackdropClick(event: MouseEvent) {
                   </div>
 
                   <!-- Types -->
-                  <div v-if="card.types && card.types.length > 0" class="col-span-2 p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
+                  <div
+                    v-if="card.types && card.types.length > 0"
+                    class="col-span-2 p-4 rounded-xl bg-gray-100 dark:bg-gray-800"
+                  >
                     <div class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                       Types
                     </div>
@@ -128,7 +137,10 @@ function handleBackdropClick(event: MouseEvent) {
                     type="button"
                     class="flex-1 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Icon icon="ph:heart-fill" class="w-5 h-5" />
+                    <Icon
+                      icon="ph:heart-fill"
+                      class="w-5 h-5"
+                    />
                     <span>Add to Favorites</span>
                   </button>
                   <button
@@ -136,7 +148,10 @@ function handleBackdropClick(event: MouseEvent) {
                     class="px-6 py-3 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors flex items-center justify-center"
                     title="Share"
                   >
-                    <Icon icon="ph:share-network-bold" class="w-5 h-5" />
+                    <Icon
+                      icon="ph:share-network-bold"
+                      class="w-5 h-5"
+                    />
                   </button>
                 </div>
               </div>

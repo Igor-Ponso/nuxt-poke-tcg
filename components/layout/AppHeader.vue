@@ -88,7 +88,7 @@ function toggleDarkMode() {
   uiStore.showToast(
     uiStore.darkMode ? 'Dark mode enabled' : 'Light mode enabled',
     'success',
-    2000
+    2000,
   )
 }
 
@@ -100,7 +100,7 @@ function toggleTCGMode() {
   uiStore.showToast(
     tcgStore.tcgMode ? 'TCG Mode activated!' : 'TCG Mode deactivated',
     tcgStore.tcgMode ? 'success' : 'info',
-    2000
+    2000,
   )
 }
 
@@ -145,7 +145,10 @@ function toggleMobileMenu() {
           <div
             class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
           >
-            <Icon icon="ph:lightning" class="w-6 h-6 text-white" />
+            <Icon
+              icon="ph:lightning"
+              class="w-6 h-6 text-white"
+            />
           </div>
           <div class="hidden md:block">
             <h1 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -171,7 +174,10 @@ function toggleMobileMenu() {
             "
           >
             <span class="inline-flex items-center gap-2">
-              <Icon :icon="link.icon" class="w-4 h-4" />
+              <Icon
+                :icon="link.icon"
+                class="w-4 h-4"
+              />
               <span>{{ link.label }}</span>
               <span
                 v-if="link.badge"
@@ -208,7 +214,10 @@ function toggleMobileMenu() {
             aria-label="Toggle search"
             @click="showSearch = !showSearch"
           >
-            <Icon icon="ph:magnifying-glass" class="w-5 h-5" />
+            <Icon
+              icon="ph:magnifying-glass"
+              class="w-5 h-5"
+            />
           </UiButton>
 
           <!-- TCG Mode Toggle -->
@@ -218,7 +227,10 @@ function toggleMobileMenu() {
             aria-label="Toggle TCG Mode"
             @click="toggleTCGMode"
           >
-            <Icon icon="ph:cards" class="w-5 h-5" />
+            <Icon
+              icon="ph:cards"
+              class="w-5 h-5"
+            />
           </UiButton>
 
           <!-- Dark Mode Toggle -->
@@ -228,7 +240,10 @@ function toggleMobileMenu() {
             aria-label="Toggle dark mode"
             @click="toggleDarkMode"
           >
-            <Icon :icon="uiStore.darkMode ? 'ph:moon' : 'ph:sun'" class="w-5 h-5" />
+            <Icon
+              :icon="uiStore.darkMode ? 'ph:moon' : 'ph:sun'"
+              class="w-5 h-5"
+            />
           </UiButton>
 
           <!-- Mobile Menu Toggle -->
@@ -239,7 +254,10 @@ function toggleMobileMenu() {
             aria-label="Toggle menu"
             @click="toggleMobileMenu"
           >
-            <Icon :icon="uiStore.mobileMenuOpen ? 'ph:x' : 'ph:list'" class="w-5 h-5" />
+            <Icon
+              :icon="uiStore.mobileMenuOpen ? 'ph:x' : 'ph:list'"
+              class="w-5 h-5"
+            />
           </UiButton>
         </div>
       </div>
@@ -247,7 +265,10 @@ function toggleMobileMenu() {
       <!-- Mobile Search (Client-only to prevent hydration mismatch) -->
       <ClientOnly>
         <Transition name="slide-down">
-          <div v-if="showSearch && uiStore.isMobile" class="py-4 border-t border-gray-200 dark:border-gray-700">
+          <div
+            v-if="showSearch && uiStore.isMobile"
+            class="py-4 border-t border-gray-200 dark:border-gray-700"
+          >
             <form @submit.prevent="handleSearch">
               <UiInput
                 v-model="searchQuery"
@@ -268,32 +289,35 @@ function toggleMobileMenu() {
             v-if="uiStore.mobileMenuOpen"
             class="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700"
           >
-          <div class="flex flex-col gap-2">
-            <NuxtLink
-              v-for="link in navLinks"
-              :key="link.path"
-              :to="link.path"
-              class="flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all"
-              :class="
-                link.active
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-              "
-              @click="uiStore.closeMobileMenu()"
-            >
-              <span class="flex items-center gap-3">
-                <Icon :icon="link.icon" class="w-5 h-5" />
-                <span>{{ link.label }}</span>
-              </span>
-              <span
-                v-if="link.badge"
-                class="px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white"
+            <div class="flex flex-col gap-2">
+              <NuxtLink
+                v-for="link in navLinks"
+                :key="link.path"
+                :to="link.path"
+                class="flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all"
+                :class="
+                  link.active
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                "
+                @click="uiStore.closeMobileMenu()"
               >
-                {{ link.badge }}
-              </span>
-            </NuxtLink>
-          </div>
-        </nav>
+                <span class="flex items-center gap-3">
+                  <Icon
+                    :icon="link.icon"
+                    class="w-5 h-5"
+                  />
+                  <span>{{ link.label }}</span>
+                </span>
+                <span
+                  v-if="link.badge"
+                  class="px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white"
+                >
+                  {{ link.badge }}
+                </span>
+              </NuxtLink>
+            </div>
+          </nav>
         </Transition>
       </ClientOnly>
     </div>

@@ -69,7 +69,6 @@ export function useCache<T>(key: string, config: CacheConfig = {}) {
    */
   const log = (message: string, ...args: unknown[]) => {
     if (debug && import.meta.client) {
-      // eslint-disable-next-line no-console
       console.log(`[Cache:${fullKey}]`, message, ...args)
     }
   }

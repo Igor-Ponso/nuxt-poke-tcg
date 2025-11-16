@@ -257,4 +257,3 @@ function buildQueryParams(params: TCGCardQueryParams): string {
 
   return queryParts.join('&')
 }
-

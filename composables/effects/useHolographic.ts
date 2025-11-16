@@ -34,7 +34,7 @@ export function useHolographic(
     intensity: 1,
     speed: 1,
     type: 'standard',
-  }
+  },
 ) {
   const { enabled, intensity = 1, type = 'standard' } = config
 

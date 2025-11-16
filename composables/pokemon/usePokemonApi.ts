@@ -8,6 +8,7 @@
 import type {
   Pokemon,
   PokemonSpecies,
+  PokemonType,
   EvolutionChain,
   SimplifiedPokemon,
   PokemonCardData,
@@ -119,7 +120,7 @@ export function usePokemonApi() {
     return {
       id: pokemon.id,
       name: pokemon.name,
-      types: pokemon.types.map(t => t.type.name as any),
+      types: pokemon.types.map(t => t.type.name as PokemonType),
       sprite: pokemon.sprites.other?.['official-artwork'].front_default || pokemon.sprites.front_default || '',
       shinySprite: pokemon.sprites.other?.['official-artwork'].front_shiny || pokemon.sprites.front_shiny || '',
       stats: {
@@ -142,7 +143,7 @@ export function usePokemonApi() {
 
     // Get English description
     const englishEntry = species.flavor_text_entries.find(
-      entry => entry.language.name === 'en'
+      entry => entry.language.name === 'en',
     )
     const description = englishEntry ? cleanFlavorText(englishEntry.flavor_text) : ''
 

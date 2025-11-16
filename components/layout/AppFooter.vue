@@ -28,7 +28,10 @@ const quickLinks = [
         <!-- Left: Brand + Love -->
         <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           <span>Made with</span>
-          <Icon icon="ph:heart-fill" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
+          <Icon
+            icon="ph:heart-fill"
+            class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500"
+          />
           <span>for Pokémon fans</span>
         </div>
 
@@ -56,11 +59,21 @@ const quickLinks = [
       <div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
         <p class="text-[10px] sm:text-xs text-center text-gray-500 dark:text-gray-500 leading-relaxed">
           Data provided by
-          <a href="https://pokeapi.co/" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <a
+            href="https://pokeapi.co/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >
             PokéAPI
           </a>
           and
-          <a href="https://pokemontcg.io/" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <a
+            href="https://pokemontcg.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >
             Pokémon TCG API
           </a>
           <span class="hidden sm:inline">•</span>
