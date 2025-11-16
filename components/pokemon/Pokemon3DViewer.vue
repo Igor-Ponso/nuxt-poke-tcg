@@ -128,7 +128,10 @@ watch(() => props.pokemonId, () => {
 </script>
 
 <template>
-  <div class="pokemon-3d-viewer relative">
+  <div
+    class="pokemon-3d-viewer relative w-full"
+    :style="{ height: height }"
+  >
     <!-- Loading Spinner -->
     <div
       v-if="isLoading"
@@ -168,7 +171,7 @@ watch(() => props.pokemonId, () => {
       :camera-orbit="cameraOrbit"
       :style="{
         width: '100%',
-        height: height,
+        height: '100%',
         backgroundColor: backgroundColor,
       }"
       class="rounded-2xl overflow-hidden"
