@@ -41,6 +41,44 @@
     scroll-behavior: smooth;
   }
 
+  /* Custom Scrollbar */
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    @apply w-3 h-3;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900/50;
+    @apply border-l border-slate-700/50;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gradient-to-b from-blue-500 to-purple-600;
+    @apply rounded-full;
+    @apply border-2 border-slate-800;
+    @apply transition-all duration-300;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply from-blue-400 to-purple-500;
+    @apply shadow-lg shadow-blue-500/50;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    @apply from-blue-600 to-purple-700;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(59, 130, 246) rgb(15, 23, 42);
+  }
+
+  /* Dark mode adjustments */
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-slate-950/80;
+  }
+
   /* Selection */
   ::selection {
     @apply bg-blue-500/30 text-white;

@@ -35,6 +35,9 @@ const isExpanded = ref(true)
  * Available game versions with colors matching generations
  */
 const gameVersions: GameVersion[] = [
+  // Animated (All Generations)
+  { id: 'animated', name: 'Animated', generation: 0, color: 'from-purple-500 to-pink-500' },
+
   // Generation I
   { id: 'red-blue', name: 'Red/Blue', generation: 1, color: 'from-red-500 to-pink-500' },
   { id: 'yellow', name: 'Yellow', generation: 1, color: 'from-red-500 to-pink-500' },
@@ -72,6 +75,7 @@ const gameVersions: GameVersion[] = [
  */
 function getPikachuSpriteUrl(versionId: string): string {
   const versionMap: Record<string, string> = {
+    'animated': 'https://projectpokemon.org/images/normal-sprite/pikachu.gif',
     'red-blue': 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-i/red-blue/25.png',
     'yellow': 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-i/yellow/25.png',
     'gold': 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ii/gold/25.png',

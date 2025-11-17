@@ -13,6 +13,7 @@ import type {
   SimplifiedPokemon,
   PokemonCardData,
   NamedAPIResourceList,
+  Ability,
 } from '~/types'
 
 export function usePokemonApi() {
@@ -236,10 +237,32 @@ export function usePokemonApi() {
     return pokemon
   }
 
+  /**
+   * Fetches ability details (effect, description, etc.)
+   */
+  async function fetchAbility(idOrName: string | number): Promise<Ability> {
+    const cache = useCache<Ability>(`ability_${idOrName}`, {
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days (ability data rarely changes)
+      prefix: 'pokeapi',
+    })
+
+    const cached = cache.get()
+    if (cached) {
+      return cached
+    }
+
+    const url = `${baseUrl}/ability/${idOrName}`
+    const data = await $fetch<Ability>(url)
+
+    cache.set(data)
+    return data
+  }
+
   return {
     fetchPokemon,
     fetchSpecies,
     fetchEvolutionChain,
+    fetchAbility,
     fetchPokemonList,
     fetchPokemonBatch,
     fetchPokemonWithSpecies,

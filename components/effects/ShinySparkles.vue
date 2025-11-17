@@ -7,7 +7,7 @@
  * 2. Idle state: Stars twinkle and float around the Pokemon
  */
 
-import { Icon } from '@iconify/vue'
+import { Icon } from '@iconify/vue';
 
 interface Props {
   active?: boolean
@@ -35,22 +35,27 @@ const stars = ref<Star[]>([])
 const spiralStars = ref<Star[]>([])
 const idleStars = ref<Star[]>([])
 const showSpiral = ref(false)
+const showIdle = ref(false)
 
 // Generate stars when active
 watch(() => props.active, (isActive) => {
   if (isActive) {
-    // Show spiral animation
+    // Reset states
     showSpiral.value = true
+    showIdle.value = false
+
     generateSpiralStars()
     generateIdleStars()
 
     // Hide spiral after animation completes (0.12 * 6 stars + 0.6s animation + 0.3s fade = 1.62s)
     setTimeout(() => {
       showSpiral.value = false
+      showIdle.value = true
     }, 1700)
   }
   else {
     showSpiral.value = false
+    showIdle.value = false
   }
 }, { immediate: true })
 
@@ -75,19 +80,22 @@ function generateSpiralStars() {
 }
 
 function generateIdleStars() {
-  const starCount = 4
-  const newStars: Star[] = []
+  // 3-4 stars positioned AROUND the Pokemon (not on it)
+  const positions = [
+    { angle: 45, distance: 90 }, // Top-right corner
+    { angle: 135, distance: 90 }, // Top-left corner
+    { angle: 315, distance: 85 }, // Bottom-right
+    { angle: 225, distance: 85 }, // Bottom-left
+  ]
 
-  for (let i = 0; i < starCount; i++) {
-    newStars.push({
-      id: i + 100, // Different IDs from spiral stars
-      delay: 1.5 + (Math.random() * 0.8), // Start after spiral completes
-      angle: Math.random() * 360, // Random positions around Pokemon
-      distance: 80 + Math.random() * 30, // Distance 80-110% (away from center)
-      size: 0.7 + Math.random() * 0.3, // Random size between 0.7 and 1.0
-      duration: 2.5 + Math.random() * 2, // Random duration between 2.5-4.5s for idle animation
-    })
-  }
+  const newStars: Star[] = positions.map((pos, i) => ({
+    id: i + 100,
+    delay: Math.random() * 1.2, // Random start delays
+    angle: pos.angle,
+    distance: pos.distance,
+    size: 0.6 + Math.random() * 0.4, // Stars size (0.6-1.0)
+    duration: 1.8 + Math.random() * 1.5, // Duration between 1.8-3.3s
+  }))
 
   idleStars.value = newStars
   stars.value = newStars // Keep for compatibility
@@ -119,57 +127,32 @@ const iconSize = computed(() => {
     class="absolute inset-0 pointer-events-none overflow-visible z-20"
   >
     <div class="absolute inset-0 flex items-center justify-center">
-      <div :class="containerSize" class="relative">
+      <div
+        :class="containerSize"
+        class="relative"
+      >
         <!-- Spiral Stars (appear once then disappear) -->
-        <div
-          v-for="star in spiralStars"
-          v-show="showSpiral"
-          :key="`spiral-${star.id}`"
-          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 spiral-star"
-          :style="{
-            '--star-angle': `${star.angle}deg`,
-            '--star-distance': `${star.distance}%`,
-            '--star-size': star.size,
-            '--star-delay': `${star.delay}s`,
-          }"
-        >
-          <div class="spiral-container">
-            <Icon
-              icon="ph:sparkle-fill"
-              :class="iconSize"
-              class="text-yellow-300 drop-shadow-[0_0_6px_rgba(253,224,71,0.9)]"
-            />
-          </div>
-        </div>
-
-        <!-- Idle Stars (twinkle continuously) -->
-        <div
-          v-for="star in idleStars"
-          :key="`idle-${star.id}`"
-          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-          :style="{
-            transform: `
-              translate(-50%, -50%)
-              rotate(${star.angle}deg)
-              translateY(-${star.distance}%)
-            `,
-          }"
-        >
+        <template v-if="showSpiral">
           <div
-            class="idle-star"
+            v-for="star in spiralStars"
+            :key="`spiral-${star.id}`"
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 spiral-star"
             :style="{
-              '--idle-delay': `${star.delay}s`,
-              '--idle-duration': `${star.duration}s`,
-              transform: `scale(${star.size})`,
+              '--star-angle': `${star.angle}deg`,
+              '--star-distance': `${star.distance}%`,
+              '--star-size': star.size,
+              '--star-delay': `${star.delay}s`,
             }"
           >
-            <Icon
-              icon="ph:sparkle-fill"
-              :class="iconSize"
-              class="text-yellow-300 drop-shadow-[0_0_4px_rgba(253,224,71,0.8)]"
-            />
+            <div class="spiral-container">
+              <Icon
+                icon="ph:sparkle-fill"
+                :class="iconSize"
+                class="text-yellow-300 drop-shadow-[0_0_6px_rgba(253,224,71,0.9)]"
+              />
+            </div>
           </div>
-        </div>
+        </template>
       </div>
     </div>
   </div>

@@ -9,7 +9,7 @@ import { Icon } from '@iconify/vue'
 import type { Tab } from '~/components/ui/UiTabs.vue'
 import type { Pokemon3DModel } from '~/composables/pokemon/usePokemon3D'
 import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
-import type { SimplifiedPokemon } from '~/types'
+import type { SimplifiedPokemon, Pokemon, PokemonSpecies, FlavorText, Ability } from '~/types'
 
 const props = defineProps<{
   pokemon: SimplifiedPokemon | null
@@ -26,7 +26,9 @@ const pokemonStore = usePokemonStore()
 const formsStore = usePokemonFormsStore()
 const { getAllForms } = usePokemon3D()
 const { getAvailableFormsForPokemon, getEnglishFormName } = usePokemonForms()
-const { fetchPokemon, formatHeight, formatWeight } = usePokemonDetails()
+const { fetchPokemon, fetchSpecies, formatHeight, formatWeight } = usePokemonDetails()
+const api = usePokemonApi()
+const { animateCount, easeOutCubic } = useCountingAnimation()
 const show3D = ref(false)
 const showShiny = ref(false)
 const activeTab = ref('about')
@@ -38,12 +40,27 @@ const available2DForms = ref<PokemonForm[]>([])
 const pokemonDetails = ref<{
   height: { metric: string, imperial: string } | null
   weight: { metric: string, imperial: string } | null
+  pokemon: Pokemon | null
+  species: PokemonSpecies | null
   loading: boolean
 }>({
   height: null,
   weight: null,
+  pokemon: null,
+  species: null,
   loading: false,
 })
+
+// Abilities details (fetched separately for descriptions)
+const abilitiesDetails = ref<Map<string, Ability>>(new Map())
+const loadingAbilities = ref(false)
+
+// Animated values for height and weight
+const animatedHeight = ref(0)
+const animatedWeight = ref(0)
+const physicalInfoSection = ref<HTMLElement | null>(null)
+const hasAnimated = ref(false)
+const isFirstLoad = ref(true) // Track if it's the first time loading a Pokemon
 
 // Get selected 2D form from store with computed getter/setter
 const selected2DForm = computed({
@@ -179,6 +196,24 @@ function navigateNext() {
 }
 
 /**
+ * Handle navigation from evolution chain
+ */
+async function handleEvolutionNavigation(pokemonName: string) {
+  // Fetch the Pokemon by name
+  const api = usePokemonApi()
+  try {
+    const pokemon = await api.fetchPokemon(pokemonName)
+    const simplified = api.simplifyPokemon(pokemon)
+
+    // Emit navigate event with the Pokemon
+    emit('navigate', simplified)
+  }
+  catch (error) {
+    console.error('Failed to navigate to Pokemon:', error)
+  }
+}
+
+/**
  * Handle keyboard navigation
  */
 function handleKeydown(event: KeyboardEvent) {
@@ -206,6 +241,41 @@ const pokemonHeightInMeters = computed(() => {
   // Extract numeric value from metric string (e.g., "1.70 m" -> 1.70)
   return Number.parseFloat(pokemonDetails.value.height.metric)
 })
+
+/**
+ * Get the most recent English flavor text from species data
+ */
+const flavorText = computed(() => {
+  if (!pokemonDetails.value.species?.flavor_text_entries) return ''
+
+  // Find the most recent English flavor text entry
+  const englishEntries = pokemonDetails.value.species.flavor_text_entries
+    .filter((entry: FlavorText) => entry.language.name === 'en')
+
+  if (englishEntries.length === 0) return ''
+
+  // Get the latest entry (they're usually ordered by version)
+  const latestEntry = englishEntries[englishEntries.length - 1]
+
+  // Clean up the flavor text (remove form feeds and extra whitespace)
+  return latestEntry.flavor_text
+    .replace(/\f/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+})
+
+/**
+ * Get ability effect description in English
+ */
+function getAbilityEffect(abilityName: string): string {
+  const ability = abilitiesDetails.value.get(abilityName)
+  if (!ability) return ''
+
+  // Try to get short_effect first (more concise)
+  const englishEffect = ability.effect_entries.find(entry => entry.language.name === 'en')
+  return englishEffect?.short_effect || englishEffect?.effect || ''
+}
 
 /**
  * Load available forms when pokemon changes
@@ -251,21 +321,31 @@ watch(showShiny, (isShiny) => {
 })
 
 /**
- * Fetch Pokemon details (height, weight, abilities, etc.) when modal opens
+ * Fetch Pokemon details (height, weight, abilities, species, etc.) when modal opens
  */
 watch(() => props.pokemon?.id, async (newId) => {
   if (!newId) {
-    pokemonDetails.value = { height: null, weight: null, loading: false }
+    pokemonDetails.value = { height: null, weight: null, pokemon: null, species: null, loading: false }
     return
   }
 
   try {
     pokemonDetails.value.loading = true
-    const fullPokemon = await fetchPokemon(newId)
+
+    // Fetch both Pokemon and Species data in parallel
+    const [fullPokemon, speciesData] = await Promise.all([
+      fetchPokemon(newId),
+      fetchSpecies(newId),
+    ])
 
     if (fullPokemon) {
+      pokemonDetails.value.pokemon = fullPokemon
       pokemonDetails.value.height = formatHeight(fullPokemon.height)
       pokemonDetails.value.weight = formatWeight(fullPokemon.weight)
+    }
+
+    if (speciesData) {
+      pokemonDetails.value.species = speciesData
     }
   }
   catch (error) {
@@ -275,6 +355,134 @@ watch(() => props.pokemon?.id, async (newId) => {
     pokemonDetails.value.loading = false
   }
 }, { immediate: true })
+
+/**
+ * Fetch abilities details when Pokemon changes
+ */
+watch(() => pokemonDetails.value.pokemon?.abilities, async (abilities) => {
+  if (!abilities || abilities.length === 0) {
+    abilitiesDetails.value.clear()
+    return
+  }
+
+  try {
+    loadingAbilities.value = true
+    abilitiesDetails.value.clear()
+
+    // Fetch all abilities in parallel
+    const abilityPromises = abilities.map(async (abilitySlot) => {
+      const abilityName = abilitySlot.ability.name
+      const abilityData = await api.fetchAbility(abilityName)
+      return { name: abilityName, data: abilityData }
+    })
+
+    const results = await Promise.all(abilityPromises)
+
+    // Store in map for easy lookup
+    results.forEach(({ name, data }) => {
+      abilitiesDetails.value.set(name, data)
+    })
+  }
+  catch (error) {
+    console.error('[PokemonModal] Failed to fetch abilities:', error)
+  }
+  finally {
+    loadingAbilities.value = false
+  }
+}, { immediate: true })
+
+/**
+ * Function to trigger animations
+ */
+function triggerAnimations() {
+  if (hasAnimated.value) return
+
+  // Animate height
+  if (pokemonDetails.value.height?.metric) {
+    const heightValue = Number.parseFloat(pokemonDetails.value.height.metric)
+    if (!Number.isNaN(heightValue)) {
+      animateCount(0, heightValue, 1000, (value) => {
+        animatedHeight.value = value
+      }, easeOutCubic)
+    }
+  }
+  else {
+    animatedHeight.value = 0
+  }
+
+  // Animate weight
+  if (pokemonDetails.value.weight?.metric) {
+    const weightValue = Number.parseFloat(pokemonDetails.value.weight.metric)
+    if (!Number.isNaN(weightValue)) {
+      animateCount(0, weightValue, 1000, (value) => {
+        animatedWeight.value = value
+      }, easeOutCubic)
+    }
+  }
+  else {
+    animatedWeight.value = 0
+  }
+
+  hasAnimated.value = true
+}
+
+/**
+ * Setup intersection observer to trigger animations when section is visible
+ */
+useIntersectionObserver(
+  physicalInfoSection,
+  ([{ isIntersecting }]) => {
+    if (isIntersecting && !hasAnimated.value) {
+      triggerAnimations()
+    }
+  },
+  {
+    threshold: 0.3, // Trigger when 30% of the section is visible
+  },
+)
+
+/**
+ * Reset animation state when Pokemon changes and check if section is already visible
+ */
+watch(() => pokemonDetails.value.pokemon?.id, async () => {
+  // Reset animation flag and values when Pokemon changes
+  hasAnimated.value = false
+  animatedHeight.value = 0
+  animatedWeight.value = 0
+
+  // If it's the first load, don't auto-trigger animations
+  if (isFirstLoad.value) {
+    isFirstLoad.value = false
+    return
+  }
+
+  // Wait for next tick to ensure DOM is updated
+  await nextTick()
+
+  // Check if the Physical Info section is already visible in viewport
+  // (only for subsequent loads when user navigates with arrows)
+  if (physicalInfoSection.value) {
+    const rect = physicalInfoSection.value.getBoundingClientRect()
+    const isVisible = rect.top < window.innerHeight && rect.bottom > 0
+
+    // If section is already visible (user scrolled down), trigger animations immediately
+    if (isVisible) {
+      // Small delay to ensure data is loaded
+      setTimeout(() => {
+        triggerAnimations()
+      }, 100)
+    }
+  }
+})
+
+/**
+ * Reset first load flag when modal is opened
+ */
+watch(() => props.show, (isShowing) => {
+  if (isShowing) {
+    isFirstLoad.value = true
+  }
+})
 
 // Add keyboard listener
 onMounted(() => {
@@ -609,7 +817,7 @@ onUnmounted(() => {
                   >
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <!-- Physical Info -->
-                      <div class="space-y-4">
+                      <div ref="physicalInfoSection" class="space-y-4">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                           Physical Info
                         </h3>
@@ -650,7 +858,7 @@ onUnmounted(() => {
                                     class="text-right"
                                   >
                                     <div class="font-bold text-lg text-gray-900 dark:text-white">
-                                      {{ pokemonDetails.height.metric }}
+                                      {{ animatedHeight.toFixed(2) }} m
                                     </div>
                                     <div class="text-xs text-gray-600 dark:text-gray-400">
                                       {{ pokemonDetails.height.imperial }}
@@ -697,27 +905,28 @@ onUnmounted(() => {
                                     class="w-full h-full object-contain brightness-0 dark:brightness-100 opacity-80"
                                   >
                                   <span class="text-[10px] font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                                    {{ pokemonDetails.height.metric }}
+                                    {{ animatedHeight.toFixed(2) }}m
                                   </span>
                                 </div>
                               </div>
                             </div>
                           </div>
 
-                          <!-- Weight -->
-                          <div class="group relative overflow-hidden p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                          <!-- Weight with Animated Values -->
+                          <div class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                             <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div class="relative flex items-center justify-between">
-                              <div class="flex items-center gap-3">
-                                <div class="p-2 rounded-lg bg-purple-500/20 dark:bg-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                                  <Icon
-                                    icon="ph:scales-bold"
-                                    class="w-5 h-5 text-purple-600 dark:text-purple-400"
-                                  />
+                            <div class="relative p-4 space-y-3">
+                              <!-- Header -->
+                              <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                  <div class="p-2 rounded-lg bg-purple-500/20 dark:bg-purple-500/30 group-hover:scale-110 transition-transform duration-300">
+                                    <Icon
+                                      icon="ph:scales-bold"
+                                      class="w-5 h-5 text-purple-600 dark:text-purple-400"
+                                    />
+                                  </div>
+                                  <span class="font-semibold text-gray-700 dark:text-gray-300">Weight</span>
                                 </div>
-                                <span class="font-semibold text-gray-700 dark:text-gray-300">Weight</span>
-                              </div>
-                              <div class="text-right">
                                 <Transition
                                   mode="out-in"
                                   enter-active-class="transition duration-200 ease-out"
@@ -736,10 +945,10 @@ onUnmounted(() => {
                                   </div>
                                   <div
                                     v-else-if="pokemonDetails.weight"
-                                    class="space-y-0.5"
+                                    class="text-right"
                                   >
                                     <div class="font-bold text-lg text-gray-900 dark:text-white">
-                                      {{ pokemonDetails.weight.metric }}
+                                      {{ animatedWeight.toFixed(1) }} kg
                                     </div>
                                     <div class="text-xs text-gray-600 dark:text-gray-400">
                                       {{ pokemonDetails.weight.imperial }}
@@ -753,6 +962,31 @@ onUnmounted(() => {
                                   </span>
                                 </Transition>
                               </div>
+
+                              <!-- Visual Weight Bar (comparative) -->
+                              <div
+                                v-if="pokemonDetails.weight && pokemon"
+                                class="space-y-2"
+                              >
+                                <div class="relative h-6 bg-purple-100 dark:bg-purple-900/30 rounded-full overflow-hidden">
+                                  <!-- Progress bar -->
+                                  <div
+                                    class="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-800 ease-out"
+                                    :style="{ width: `${Math.min((animatedWeight / 500) * 100, 100)}%` }"
+                                  />
+                                  <!-- Label inside bar if space available, otherwise outside -->
+                                  <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-xs font-medium text-purple-900 dark:text-purple-100 mix-blend-difference">
+                                      {{ animatedWeight.toFixed(1) }} kg
+                                    </span>
+                                  </div>
+                                </div>
+                                <!-- Reference labels -->
+                                <div class="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 px-1">
+                                  <span>0 kg</span>
+                                  <span>500 kg</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -763,11 +997,99 @@ onUnmounted(() => {
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                           Abilities
                         </h3>
-                        <div class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
-                          <p class="text-gray-600 dark:text-gray-400">
-                            Ability information coming soon...
-                          </p>
-                        </div>
+                        <Transition
+                          mode="out-in"
+                          enter-active-class="transition duration-200 ease-out"
+                          enter-from-class="opacity-0 scale-95"
+                          enter-to-class="opacity-100 scale-100"
+                          leave-active-class="transition duration-150 ease-in"
+                          leave-from-class="opacity-100 scale-100"
+                          leave-to-class="opacity-0 scale-95"
+                        >
+                          <div
+                            v-if="pokemonDetails.loading"
+                            class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center gap-2"
+                          >
+                            <div class="w-3 h-3 rounded-full bg-purple-500 animate-pulse" />
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Loading abilities...</span>
+                          </div>
+                          <div
+                            v-else-if="pokemonDetails.pokemon?.abilities && pokemonDetails.pokemon.abilities.length > 0"
+                            class="grid grid-cols-1 gap-3"
+                          >
+                            <div
+                              v-for="abilitySlot in pokemonDetails.pokemon.abilities"
+                              :key="abilitySlot.ability.name"
+                              class="group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:scale-[1.02]"
+                              :class="abilitySlot.is_hidden
+                                ? 'border-purple-300 dark:border-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20'
+                                : 'border-blue-300 dark:border-blue-700 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20'"
+                            >
+                              <!-- Content -->
+                              <div class="relative p-4 space-y-2">
+                                <!-- Ability Name -->
+                                <div class="flex items-center justify-between">
+                                  <h4 class="font-bold text-lg text-gray-900 dark:text-white capitalize">
+                                    {{ abilitySlot.ability.name.replace(/-/g, ' ') }}
+                                  </h4>
+                                  <span
+                                    v-if="abilitySlot.is_hidden"
+                                    class="px-2 py-1 text-xs font-medium rounded-full bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200"
+                                  >
+                                    Hidden
+                                  </span>
+                                </div>
+
+                                <!-- Ability Description -->
+                                <Transition
+                                  mode="out-in"
+                                  enter-active-class="transition duration-150 ease-out"
+                                  enter-from-class="opacity-0"
+                                  enter-to-class="opacity-100"
+                                  leave-active-class="transition duration-100 ease-in"
+                                  leave-from-class="opacity-100"
+                                  leave-to-class="opacity-0"
+                                >
+                                  <div
+                                    v-if="loadingAbilities"
+                                    class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+                                  >
+                                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                    <span>Loading description...</span>
+                                  </div>
+                                  <p
+                                    v-else-if="getAbilityEffect(abilitySlot.ability.name)"
+                                    class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed"
+                                  >
+                                    {{ getAbilityEffect(abilitySlot.ability.name) }}
+                                  </p>
+                                  <p
+                                    v-else
+                                    class="text-sm text-gray-500 dark:text-gray-500 italic"
+                                  >
+                                    No description available
+                                  </p>
+                                </Transition>
+                              </div>
+
+                              <!-- Hover Glow -->
+                              <div
+                                class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
+                                :class="abilitySlot.is_hidden
+                                  ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                                  : 'bg-gradient-to-br from-blue-500 to-cyan-500'"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            v-else
+                            class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800"
+                          >
+                            <p class="text-gray-600 dark:text-gray-400">
+                              No abilities found
+                            </p>
+                          </div>
+                        </Transition>
                       </div>
                     </div>
 
@@ -776,11 +1098,39 @@ onUnmounted(() => {
                       <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                         Description
                       </h3>
-                      <div class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
-                        <p class="text-gray-600 dark:text-gray-400">
-                          Pokemon description and flavor text coming soon...
-                        </p>
-                      </div>
+                      <Transition
+                        mode="out-in"
+                        enter-active-class="transition duration-200 ease-out"
+                        enter-from-class="opacity-0 scale-95"
+                        enter-to-class="opacity-100 scale-100"
+                        leave-active-class="transition duration-150 ease-in"
+                        leave-from-class="opacity-100 scale-100"
+                        leave-to-class="opacity-0 scale-95"
+                      >
+                        <div
+                          v-if="pokemonDetails.loading"
+                          class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center gap-2"
+                        >
+                          <div class="w-3 h-3 rounded-full bg-blue-500 animate-pulse" />
+                          <span class="text-sm text-gray-500 dark:text-gray-400">Loading description...</span>
+                        </div>
+                        <div
+                          v-else-if="flavorText"
+                          class="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-2 border-blue-200 dark:border-blue-800"
+                        >
+                          <p class="text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                            "{{ flavorText }}"
+                          </p>
+                        </div>
+                        <div
+                          v-else
+                          class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800"
+                        >
+                          <p class="text-gray-600 dark:text-gray-400">
+                            No description available
+                          </p>
+                        </div>
+                      </Transition>
                     </div>
                   </div>
 
@@ -830,13 +1180,56 @@ onUnmounted(() => {
                     v-show="currentTab === 'evolution'"
                     class="space-y-6"
                   >
-                    <div class="p-8 rounded-xl bg-gray-100 dark:bg-gray-800 text-center">
+                    <!-- Evolution Chain -->
+                    <EvolutionChain
+                      v-if="pokemonDetails.species?.evolution_chain?.url"
+                      :evolution-chain-url="pokemonDetails.species.evolution_chain.url"
+                      :current-pokemon-name="pokemon?.name || ''"
+                      @navigate="handleEvolutionNavigation"
+                    />
+
+                    <!-- Loading State -->
+                    <div
+                      v-else-if="pokemonDetails.loading"
+                      class="p-8 rounded-xl bg-gray-100 dark:bg-gray-800 text-center"
+                    >
+                      <div class="flex flex-col items-center gap-3">
+                        <svg
+                          class="animate-spin h-8 w-8 text-blue-500"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          />
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                          Loading evolution data...
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- No Evolution Data -->
+                    <div
+                      v-else
+                      class="p-8 rounded-xl bg-gray-100 dark:bg-gray-800 text-center"
+                    >
                       <Icon
                         icon="ph:git-branch-bold"
                         class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4"
                       />
                       <p class="text-gray-600 dark:text-gray-400">
-                        Evolution chain coming soon...
+                        Evolution data not available
                       </p>
                     </div>
                   </div>

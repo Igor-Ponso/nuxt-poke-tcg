@@ -5,6 +5,7 @@
  */
 
 import type { Pokemon } from '~/types'
+import { getAnimatedSpriteUrl } from './useAnimatedSprites'
 
 /**
  * Map of game version IDs to their generation and game path in the API
@@ -43,6 +44,11 @@ export function useGameSprites() {
         return officialArtwork.front_shiny
       }
       return officialArtwork?.front_default || pokemon.sprites.front_default || ''
+    }
+
+    // Special case: Animated sprites from Project Pokemon
+    if (gameVersionId === 'animated') {
+      return getAnimatedSpriteUrl(pokemon.name, shiny)
     }
 
     // Get the generation and game path

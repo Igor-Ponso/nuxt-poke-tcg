@@ -251,7 +251,10 @@ async function handleGenerationChange(genId: number) {
             v-if="groupIndex > 0 || selectedGeneration !== group.generation.id"
             class="relative py-4"
           >
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div
+              class="absolute inset-0 flex items-center"
+              aria-hidden="true"
+            >
               <div class="w-full border-t-2 border-gray-300 dark:border-gray-700" />
             </div>
             <div class="relative flex justify-center">
