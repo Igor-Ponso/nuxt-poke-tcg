@@ -460,6 +460,12 @@ function handleAudioError() {
       >
         <!-- (Watermark relocated to card container bottom-right) -->
 
+        <!-- Shiny sparkles effect -->
+        <ShinySparkles
+          :active="shinyMode"
+          :size="size"
+        />
+
         <!-- Pokemon sprite with fade transition -->
         <Transition
           mode="out-in"

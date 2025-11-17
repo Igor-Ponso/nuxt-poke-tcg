@@ -4,13 +4,15 @@
  *
  * Features:
  * - 3x3 grid layout with larger starter images
- * - Particle disintegration effect on hover (like Digimon death)
- * - Mouse tracking with VueUse
  * - Kanto pre-selected on first load
  * - No "All Gens" button (empty selection = all)
+ * - Collapsible/expandable section
  */
 
 import { Icon } from '@iconify/vue'
+
+// Expandable state
+const isExpanded = ref(true)
 
 export interface Generation {
   id: number
@@ -62,19 +64,37 @@ function getStarterImageUrl(pokemonId: number): string {
 function selectGeneration(genId: number) {
   emit('update:modelValue', genId)
 }
+
+/**
+ * Toggle expand/collapse
+ */
+function toggleExpanded() {
+  isExpanded.value = !isExpanded.value
+}
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
+  <div class="space-y-4">
+    <!-- Header - Clickable -->
+    <button
+      type="button"
+      class="w-full flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+      @click="toggleExpanded"
+    >
       <h3 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
         Select Generation
       </h3>
-    </div>
+      <Icon
+        :icon="isExpanded ? 'ph:caret-up-bold' : 'ph:caret-down-bold'"
+        class="w-6 h-6 text-gray-600 dark:text-gray-400 transition-transform duration-200"
+      />
+    </button>
 
-    <!-- Generation Grid - 3x3 layout -->
-    <div class="grid grid-cols-3 gap-4 sm:gap-6">
+    <!-- Generation Grid - 3x3 layout (Collapsible) -->
+    <div
+      v-if="isExpanded"
+      class="grid grid-cols-3 gap-4 sm:gap-6"
+    >
       <!-- Generation Buttons -->
       <button
         v-for="gen in generations"

@@ -495,31 +495,17 @@ onUnmounted(() => {
                     class="flex items-center justify-center h-full"
                   >
                     <div class="relative inline-block">
+                      <!-- Shiny sparkles effect -->
+                      <ShinySparkles
+                        :active="showShiny"
+                        size="lg"
+                      />
+
                       <img
                         :src="currentSprite"
                         :alt="pokemon.name"
                         class="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] mx-auto object-contain drop-shadow-2xl transition-all duration-300"
                       >
-                      <!-- Shiny sparkles for 2D -->
-                      <div
-                        v-if="showShiny"
-                        class="absolute inset-0 pointer-events-none"
-                      >
-                        <Icon
-                          icon="ph:sparkle-fill"
-                          class="absolute top-0 right-0 w-8 h-8 text-yellow-300 animate-ping"
-                        />
-                        <Icon
-                          icon="ph:sparkle-fill"
-                          class="absolute bottom-8 left-8 w-6 h-6 text-yellow-300 animate-ping"
-                          style="animation-delay: 0.3s"
-                        />
-                        <Icon
-                          icon="ph:sparkle-fill"
-                          class="absolute top-12 left-12 w-7 h-7 text-yellow-300 animate-ping"
-                          style="animation-delay: 0.6s"
-                        />
-                      </div>
                     </div>
                   </div>
 
