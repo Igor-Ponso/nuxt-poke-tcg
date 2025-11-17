@@ -12,6 +12,7 @@ const tcgStore = useTCGStore()
 const pokemonStore = usePokemonStore()
 const route = useRoute()
 const router = useRouter()
+const { success, info } = useToast()
 
 const searchQuery = ref('')
 const showSearch = ref(false)
@@ -85,9 +86,8 @@ const navLinks = computed(() => [
  */
 function toggleDarkMode() {
   uiStore.toggleDarkMode()
-  uiStore.showToast(
+  success(
     uiStore.darkMode ? 'Dark mode enabled' : 'Light mode enabled',
-    'success',
     2000,
   )
 }
@@ -97,11 +97,12 @@ function toggleDarkMode() {
  */
 function toggleTCGMode() {
   tcgStore.toggleTCGMode()
-  uiStore.showToast(
-    tcgStore.tcgMode ? 'TCG Mode activated!' : 'TCG Mode deactivated',
-    tcgStore.tcgMode ? 'success' : 'info',
-    2000,
-  )
+  if (tcgStore.tcgMode) {
+    success('TCG Mode activated!', 2000)
+  }
+  else {
+    info('TCG Mode deactivated', 2000)
+  }
 }
 
 /**

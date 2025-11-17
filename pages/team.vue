@@ -5,7 +5,8 @@
  * View and manage your favorite Pokemon team (max 6)
  */
 
-import type { PokemonType } from '~/types'
+import { Icon } from '@iconify/vue'
+import type { PokemonType, SimplifiedPokemon } from '~/types'
 
 useHead({
   title: 'My Team - PokéTCG',
@@ -13,13 +14,30 @@ useHead({
 })
 
 const pokemonStore = usePokemonStore()
-
-onMounted(() => {
-  pokemonStore.loadFavoritesFromStorage()
-})
+const { getStrongAgainst, getWeakTo, getCoverageScore } = useTypeEffectiveness()
 
 const favorites = computed(() => pokemonStore.favorites)
 const canAddMore = computed(() => favorites.value.length < 6)
+
+// Modal state
+const selectedPokemon = ref<SimplifiedPokemon | null>(null)
+const showModal = ref(false)
+
+/**
+ * Open Pokemon modal
+ */
+function openPokemonModal(pokemon: SimplifiedPokemon) {
+  selectedPokemon.value = pokemon
+  showModal.value = true
+}
+
+/**
+ * Close Pokemon modal
+ */
+function closePokemonModal() {
+  showModal.value = false
+  selectedPokemon.value = null
+}
 
 /**
  * Calculate team stats
@@ -60,6 +78,21 @@ const teamTypes = computed(() => {
     pokemon.types.forEach(type => types.add(type))
   })
   return Array.from(types)
+})
+
+/**
+ * Calculate type matchups
+ */
+const typeMatchups = computed(() => {
+  const strongAgainst = getStrongAgainst(teamTypes.value)
+  const weakTo = getWeakTo(teamTypes.value)
+  const coverageScore = getCoverageScore(teamTypes.value)
+
+  return {
+    strongAgainst,
+    weakTo,
+    coverageScore,
+  }
 })
 </script>
 
@@ -148,18 +181,98 @@ const teamTypes = computed(() => {
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Type Coverage
           </h2>
-          <div class="flex flex-wrap gap-2">
-            <PokemonTypeTag
-              v-for="type in teamTypes"
-              :key="type"
-              :type="type"
-              size="md"
-              show-icon
-            />
+
+          <!-- Team Types -->
+          <div class="mb-4">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Your Types ({{ teamTypes.length }}/18)
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <PokemonTypeTag
+                v-for="type in teamTypes"
+                :key="type"
+                :type="type"
+                size="md"
+                show-icon
+              />
+            </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-4">
-            Your team has {{ teamTypes.length }} unique type{{ teamTypes.length !== 1 ? 's' : '' }}
-          </p>
+
+          <!-- Coverage Score -->
+          <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-blue-900 dark:text-blue-200">
+                Offensive Coverage
+              </span>
+              <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                {{ typeMatchups.coverageScore }}/18 types
+              </span>
+            </div>
+            <div class="mt-2 h-2 bg-blue-200 dark:bg-blue-900 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-500"
+                :style="{ width: `${(typeMatchups.coverageScore / 18) * 100}%` }"
+              />
+            </div>
+          </div>
+
+          <!-- Strong Against -->
+          <div class="mb-4">
+            <h3 class="text-sm font-semibold text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
+              <Icon
+                icon="ph:sword-fill"
+                class="w-4 h-4"
+              />
+              Strong Against ({{ typeMatchups.strongAgainst.length }})
+            </h3>
+            <div
+              v-if="typeMatchups.strongAgainst.length > 0"
+              class="flex flex-wrap gap-1.5"
+            >
+              <PokemonTypeTag
+                v-for="type in typeMatchups.strongAgainst"
+                :key="type"
+                :type="type"
+                size="sm"
+                show-icon
+              />
+            </div>
+            <p
+              v-else
+              class="text-xs text-gray-500 dark:text-gray-400 italic"
+            >
+              No super effective coverage
+            </p>
+          </div>
+
+          <!-- Weak To (Defensive Weaknesses) -->
+          <div>
+            <h3 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2 flex items-center gap-1">
+              <Icon
+                icon="ph:shield-slash-fill"
+                class="w-4 h-4"
+              />
+              Weak To ({{ typeMatchups.weakTo.length }})
+            </h3>
+            <div
+              v-if="typeMatchups.weakTo.length > 0"
+              class="flex flex-wrap gap-1.5"
+            >
+              <PokemonTypeTag
+                v-for="type in typeMatchups.weakTo"
+                :key="type"
+                :type="type"
+                size="sm"
+                show-icon
+              />
+            </div>
+            <p
+              v-else
+              class="text-xs text-gray-500 dark:text-gray-400 italic"
+            >
+              No weaknesses
+            </p>
+          </div>
         </UiCard>
       </div>
 
@@ -176,7 +289,7 @@ const teamTypes = computed(() => {
             size="md"
             :favorited="true"
             show-stats
-            @click="navigateTo(`/pokedex/${pokemon.id}`)"
+            @click="openPokemonModal(pokemon)"
             @favorite="pokemonStore.toggleFavorite(pokemon)"
           />
         </div>
@@ -199,5 +312,14 @@ const teamTypes = computed(() => {
         </UiButton>
       </div>
     </div>
+
+    <!-- Pokemon Modal -->
+    <PokemonModal
+      v-if="showModal && selectedPokemon"
+      :show="showModal"
+      :pokemon="selectedPokemon"
+      @close="closePokemonModal"
+      @navigate="openPokemonModal"
+    />
   </div>
 </template>

@@ -39,26 +39,6 @@ const layoutClass = computed(() => {
     <!-- Page content (centered) -->
     <slot />
 
-    <!-- Toast Container -->
-    <Teleport to="body">
-      <div
-        class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"
-        role="region"
-        aria-label="Notifications"
-      >
-        <UiToast
-          v-for="toast in uiStore.toasts"
-          :id="toast.id"
-          :key="toast.id"
-          :message="toast.message"
-          :type="toast.type"
-          :duration="toast.duration"
-          class="pointer-events-auto"
-          @close="uiStore.removeToast(toast.id)"
-        />
-      </div>
-    </Teleport>
-
     <!-- Global Loading Overlay -->
     <UiLoading
       v-if="uiStore.globalLoading"

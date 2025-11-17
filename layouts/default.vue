@@ -81,28 +81,6 @@ const mainClass = computed(() => {
       <AppFooter />
     </div>
 
-    <!-- Toast Container (Client-only to prevent hydration mismatch) -->
-    <ClientOnly>
-      <Teleport to="body">
-        <div
-          class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"
-          role="region"
-          aria-label="Notifications"
-        >
-          <UiToast
-            v-for="toast in uiStore.toasts"
-            :id="toast.id"
-            :key="toast.id"
-            :message="toast.message"
-            :type="toast.type"
-            :duration="toast.duration"
-            class="pointer-events-auto"
-            @close="uiStore.removeToast(toast.id)"
-          />
-        </div>
-      </Teleport>
-    </ClientOnly>
-
     <!-- Global Loading Overlay -->
     <UiLoading
       v-if="uiStore.globalLoading"

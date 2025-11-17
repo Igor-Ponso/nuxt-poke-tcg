@@ -11,4 +11,7 @@ useHead({
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+
+  <!-- Toast Notifications -->
+  <ToastContainer />
 </template>

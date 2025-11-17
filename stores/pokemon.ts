@@ -337,18 +337,21 @@ export const usePokemonStore = defineStore('pokemon', {
      */
     toggleFavorite(pokemon: SimplifiedPokemon) {
       const index = this.favorites.findIndex(p => p.id === pokemon.id)
+      const { success, warning } = useToast()
 
       if (index >= 0) {
         // Remove from favorites
         this.favorites.splice(index, 1)
+        success(`${formatPokemonName(pokemon.name)} removed from team!`)
       }
       else {
         // Add to favorites (max 6 for a team)
         if (this.favorites.length < 6) {
           this.favorites.push(pokemon)
+          success(`${formatPokemonName(pokemon.name)} added to team!`)
         }
         else {
-          console.warn('Maximum of 6 Pokemon in favorites')
+          warning('Your team is full! (Max 6 Pokémon)')
         }
       }
 
