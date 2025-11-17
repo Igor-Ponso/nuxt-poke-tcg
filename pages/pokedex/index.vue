@@ -6,6 +6,7 @@
  */
 
 import type { SimplifiedPokemon } from '~/types'
+import { GENERATIONS } from '~/utils/constants'
 
 useHead({
   title: 'Pokédex - PokéTCG',
@@ -19,68 +20,53 @@ const showPokemonModal = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
 const selectedGeneration = ref(1) // Default to Kanto (Gen 1)
 
-// Virtual scrolling with chunks for grid layout
-const ITEMS_PER_ROW = 4 // xl:grid-cols-4
-const ROW_HEIGHT = 450 // Approximate height of card row in px (card ~380px + gap 24px + margin)
-const OVERSCAN_ROWS = 3 // Extra rows to render above/below viewport (3 rows = ~1350px buffer)
+// Group Pokemon by generation with dividers
+const pokemonsByGeneration = computed(() => {
+  const pokemons = pokemonStore.filteredPokemons
+  const groups: Array<{ type: 'group', generation: typeof GENERATIONS[number], pokemonList: SimplifiedPokemon[] }> = []
 
-const scrollY = ref(0)
-const containerHeight = ref(0)
+  let currentGeneration = -1
+  let currentGroup: SimplifiedPokemon[] = []
 
-// Calculate visible range based on scroll position
-const visibleRange = computed(() => {
-  // First visible row (top of viewport)
-  const firstVisibleRow = Math.floor(scrollY.value / ROW_HEIGHT)
+  pokemons.forEach((pokemon) => {
+    // Determine which generation this Pokemon belongs to
+    const gen = GENERATIONS.find(g => pokemon.id >= g.range.start && pokemon.id <= g.range.end)
 
-  // Last visible row (bottom of viewport)
-  const lastVisibleRow = Math.ceil((scrollY.value + containerHeight.value) / ROW_HEIGHT)
+    if (gen && gen.id !== currentGeneration) {
+      // Save previous group if it exists
+      if (currentGroup.length > 0 && currentGeneration !== -1) {
+        const prevGen = GENERATIONS.find(g => g.id === currentGeneration)
+        if (prevGen) {
+          groups.push({
+            type: 'group',
+            generation: prevGen,
+            pokemonList: currentGroup,
+          })
+        }
+      }
 
-  // Add overscan: 3 rows before first visible, 3 rows after last visible
-  const startRow = Math.max(0, firstVisibleRow - OVERSCAN_ROWS)
-  const endRow = lastVisibleRow + OVERSCAN_ROWS
-
-  const startIndex = startRow * ITEMS_PER_ROW
-  const endIndex = Math.min(endRow * ITEMS_PER_ROW, pokemonStore.filteredPokemons.length)
-
-  return { startIndex, endIndex, startRow }
-})
-
-// Only render visible Pokemon
-const visiblePokemons = computed(() => {
-  const { startIndex, endIndex } = visibleRange.value
-  return pokemonStore.filteredPokemons.slice(startIndex, endIndex).map((pokemon, index) => ({
-    pokemon,
-    actualIndex: startIndex + index,
-  }))
-})
-
-// Total height needed for the virtual scroll container
-const totalHeight = computed(() => {
-  const totalRows = Math.ceil(pokemonStore.filteredPokemons.length / ITEMS_PER_ROW)
-  return totalRows * ROW_HEIGHT
-})
-
-// Offset from top
-const offsetY = computed(() => {
-  return visibleRange.value.startRow * ROW_HEIGHT
-})
-
-// Track scroll position
-const { y: scrollYFromUse } = useScroll(typeof window !== 'undefined' ? window : null)
-watch(scrollYFromUse, (newY) => {
-  scrollY.value = newY
-})
-
-// Track viewport height
-onMounted(() => {
-  const updateHeight = () => {
-    containerHeight.value = window.innerHeight
-  }
-  updateHeight()
-  window.addEventListener('resize', updateHeight)
-  onUnmounted(() => {
-    window.removeEventListener('resize', updateHeight)
+      // Start new group
+      currentGeneration = gen.id
+      currentGroup = [pokemon]
+    }
+    else {
+      currentGroup.push(pokemon)
+    }
   })
+
+  // Add last group
+  if (currentGroup.length > 0 && currentGeneration !== -1) {
+    const gen = GENERATIONS.find(g => g.id === currentGeneration)
+    if (gen) {
+      groups.push({
+        type: 'group',
+        generation: gen,
+        pokemonList: currentGroup,
+      })
+    }
+  }
+
+  return groups
 })
 
 // Infinite scroll observer
@@ -148,17 +134,13 @@ onUnmounted(() => {
 
 /**
  * Load more Pokemon
+ * Always loads the next batch sequentially, regardless of selected generation
  */
 async function loadMore() {
   if (!pokemonStore.hasMore || pokemonStore.loading) return
 
-  // If a generation is selected, load more from that generation
-  if (selectedGeneration.value !== 0) {
-    await pokemonStore.fetchByGeneration(selectedGeneration.value, pokemonStore.currentPage + 1)
-  }
-  else {
-    await pokemonStore.fetchPokemons(pokemonStore.currentPage + 1)
-  }
+  // Load next batch (continues sequentially after current Pokemon)
+  await pokemonStore.loadNextBatch(20)
 }
 
 /**
@@ -257,23 +239,40 @@ async function handleGenerationChange(genId: number) {
       v-else
       class="space-y-6"
     >
-      <!-- Virtual scrolling container -->
-      <div
-        :style="{ height: `${totalHeight}px`, position: 'relative' }"
-      >
+      <!-- Pokemon Grid grouped by generation -->
+      <div class="space-y-8">
         <div
-          :style="{ transform: `translateY(${offsetY}px)` }"
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          v-for="(group, groupIndex) in pokemonsByGeneration"
+          :key="`gen-${group.generation.id}`"
+          class="space-y-6"
         >
-          <PokemonCard
-            v-for="{ pokemon, actualIndex } in visiblePokemons"
-            :key="`${pokemon.id}-${actualIndex}`"
-            :pokemon="pokemon"
-            size="md"
-            :favorited="pokemonStore.isFavorite(pokemon.id)"
-            @click="handlePokemonClick(pokemon)"
-            @favorite="pokemonStore.toggleFavorite(pokemon)"
-          />
+          <!-- Generation Divider (skip for first generation if it's the selected one) -->
+          <div
+            v-if="groupIndex > 0 || selectedGeneration !== group.generation.id"
+            class="relative py-4"
+          >
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+              <div class="w-full border-t-2 border-gray-300 dark:border-gray-700" />
+            </div>
+            <div class="relative flex justify-center">
+              <span class="bg-white dark:bg-gray-900 px-6 py-3 text-xl font-bold text-gray-900 dark:text-white rounded-full border-2 border-gray-300 dark:border-gray-700 shadow-lg">
+                {{ group.generation.name }} - {{ group.generation.region }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Pokemon Grid for this generation -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <PokemonCard
+              v-for="pokemon in group.pokemonList"
+              :key="`${pokemon.id}`"
+              :pokemon="pokemon"
+              size="md"
+              :favorited="pokemonStore.isFavorite(pokemon.id)"
+              @click="handlePokemonClick(pokemon)"
+              @favorite="pokemonStore.toggleFavorite(pokemon)"
+            />
+          </div>
         </div>
       </div>
 

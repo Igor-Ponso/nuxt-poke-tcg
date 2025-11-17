@@ -68,19 +68,17 @@ export const usePokemonStore = defineStore('pokemon', {
   getters: {
     /**
      * Filtered Pokemon based on current filters
+     *
+     * Note: selectedGeneration is used to determine the STARTING point,
+     * but does NOT filter out Pokemon from subsequent generations.
+     * This allows infinite scroll to continue loading all Pokemon sequentially.
      */
     filteredPokemons(state): SimplifiedPokemon[] {
       let filtered = state.pokemons
 
-      // Filter by generation
-      if (state.selectedGeneration !== null) {
-        const gen = GENERATIONS.find(g => g.id === state.selectedGeneration)
-        if (gen) {
-          filtered = filtered.filter(
-            p => p.id >= gen.range.start && p.id <= gen.range.end,
-          )
-        }
-      }
+      // Do NOT filter by selectedGeneration here!
+      // selectedGeneration only determines the starting point in fetchByGeneration(),
+      // but we want to show all loaded Pokemon (including from subsequent generations)
 
       // Filter by type
       if (state.selectedType) {
@@ -172,6 +170,7 @@ export const usePokemonStore = defineStore('pokemon', {
 
     /**
      * Fetches Pokemon by generation (paginated with infinite scroll)
+     * After reaching the end of selected generation, continues with next generations
      */
     async fetchByGeneration(generationId: number, page = 1, limit = 20) {
       const gen = GENERATIONS.find(g => g.id === generationId)
@@ -186,10 +185,6 @@ export const usePokemonStore = defineStore('pokemon', {
 
         // Calculate offset within this generation
         const offset = (page - 1) * limit
-        const totalInGen = gen.range.end - gen.range.start + 1
-
-        // Check if we have more to load
-        this.hasMore = (offset + limit) < totalInGen
 
         // Get the IDs for this page
         const startId = gen.range.start + offset
@@ -212,10 +207,67 @@ export const usePokemonStore = defineStore('pokemon', {
         }
 
         this.currentPage = page
+
+        // Always check if there's more content in the entire Pokedex
+        // This allows continuing to next generations after current one ends
+        const lastLoadedId = this.pokemons[this.pokemons.length - 1]?.id || 0
+        this.hasMore = lastLoadedId < this.totalCount
       }
       catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to fetch generation'
         console.error('Error fetching generation:', error)
+      }
+      finally {
+        this.loading = false
+      }
+    },
+
+    /**
+     * Loads next batch of Pokemon, continuing to next generation if current one ends
+     */
+    async loadNextBatch(limit = 20) {
+      if (this.loading) return
+
+      this.loading = true
+      this.error = null
+
+      try {
+        const api = usePokemonApi()
+        const lastPokemon = this.pokemons[this.pokemons.length - 1]
+
+        if (!lastPokemon) {
+          // No Pokemon loaded yet, start from beginning
+          await this.fetchPokemons(1, limit)
+          return
+        }
+
+        // Calculate next IDs to load
+        const nextStartId = lastPokemon.id + 1
+        const nextEndId = Math.min(nextStartId + limit, this.totalCount + 1)
+
+        if (nextStartId > this.totalCount) {
+          this.hasMore = false
+          return
+        }
+
+        const ids = Array.from(
+          { length: nextEndId - nextStartId },
+          (_, i) => nextStartId + i,
+        )
+
+        // Fetch next batch
+        const batchData = await api.fetchPokemonBatch(ids)
+        const simplified = batchData.map(p => api.simplifyPokemon(p))
+
+        // Append to existing list
+        this.pokemons.push(...simplified)
+
+        // Update hasMore status
+        this.hasMore = this.pokemons[this.pokemons.length - 1].id < this.totalCount
+      }
+      catch (error) {
+        this.error = error instanceof Error ? error.message : 'Failed to load more Pokemon'
+        console.error('Error loading next batch:', error)
       }
       finally {
         this.loading = false

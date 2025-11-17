@@ -26,12 +26,24 @@ const pokemonStore = usePokemonStore()
 const formsStore = usePokemonFormsStore()
 const { getAllForms } = usePokemon3D()
 const { getAvailableFormsForPokemon, getEnglishFormName } = usePokemonForms()
+const { fetchPokemon, formatHeight, formatWeight } = usePokemonDetails()
 const show3D = ref(false)
 const showShiny = ref(false)
 const activeTab = ref('about')
 const selected3DForm = ref<Pokemon3DModel | null>(null)
 const available3DForms = ref<Pokemon3DModel[]>([])
 const available2DForms = ref<PokemonForm[]>([])
+
+// Pokemon details data
+const pokemonDetails = ref<{
+  height: { metric: string, imperial: string } | null
+  weight: { metric: string, imperial: string } | null
+  loading: boolean
+}>({
+  height: null,
+  weight: null,
+  loading: false,
+})
 
 // Get selected 2D form from store with computed getter/setter
 const selected2DForm = computed({
@@ -187,6 +199,15 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 /**
+ * Get Pokemon height in meters for visual comparison
+ */
+const pokemonHeightInMeters = computed(() => {
+  if (!pokemonDetails.value.height) return 0
+  // Extract numeric value from metric string (e.g., "1.70 m" -> 1.70)
+  return Number.parseFloat(pokemonDetails.value.height.metric)
+})
+
+/**
  * Load available forms when pokemon changes
  */
 watch(() => props.pokemon?.id, async (newId) => {
@@ -228,6 +249,32 @@ watch(showShiny, (isShiny) => {
     selected3DForm.value = available3DForms.value.find(f => f.formName === targetFormName) || available3DForms.value[0] || null
   }
 })
+
+/**
+ * Fetch Pokemon details (height, weight, abilities, etc.) when modal opens
+ */
+watch(() => props.pokemon?.id, async (newId) => {
+  if (!newId) {
+    pokemonDetails.value = { height: null, weight: null, loading: false }
+    return
+  }
+
+  try {
+    pokemonDetails.value.loading = true
+    const fullPokemon = await fetchPokemon(newId)
+
+    if (fullPokemon) {
+      pokemonDetails.value.height = formatHeight(fullPokemon.height)
+      pokemonDetails.value.weight = formatWeight(fullPokemon.weight)
+    }
+  }
+  catch (error) {
+    console.error('[PokemonModal] Failed to fetch Pokemon details:', error)
+  }
+  finally {
+    pokemonDetails.value.loading = false
+  }
+}, { immediate: true })
 
 // Add keyboard listener
 onMounted(() => {
@@ -566,33 +613,147 @@ onUnmounted(() => {
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                           Physical Info
                         </h3>
-                        <div class="space-y-3">
-                          <!-- Height -->
-                          <div class="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
-                            <div class="flex items-center gap-3">
-                              <Icon
-                                icon="ph:arrows-vertical-bold"
-                                class="w-5 h-5 text-blue-500"
-                              />
-                              <span class="font-medium text-gray-700 dark:text-gray-300">Height</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <!-- Height with Visual Comparison -->
+                          <div class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-200 dark:border-blue-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                            <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div class="relative p-4 space-y-3">
+                              <!-- Header -->
+                              <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                  <div class="p-2 rounded-lg bg-blue-500/20 dark:bg-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+                                    <Icon
+                                      icon="ph:arrows-vertical-bold"
+                                      class="w-5 h-5 text-blue-600 dark:text-blue-400"
+                                    />
+                                  </div>
+                                  <span class="font-semibold text-gray-700 dark:text-gray-300">Height</span>
+                                </div>
+                                <Transition
+                                  mode="out-in"
+                                  enter-active-class="transition duration-200 ease-out"
+                                  enter-from-class="opacity-0 scale-90"
+                                  enter-to-class="opacity-100 scale-100"
+                                  leave-active-class="transition duration-150 ease-in"
+                                  leave-from-class="opacity-100 scale-100"
+                                  leave-to-class="opacity-0 scale-90"
+                                >
+                                  <div
+                                    v-if="pokemonDetails.loading"
+                                    class="flex items-center gap-2"
+                                  >
+                                    <div class="w-3 h-3 rounded-full bg-blue-500 animate-pulse" />
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
+                                  </div>
+                                  <div
+                                    v-else-if="pokemonDetails.height"
+                                    class="text-right"
+                                  >
+                                    <div class="font-bold text-lg text-gray-900 dark:text-white">
+                                      {{ pokemonDetails.height.metric }}
+                                    </div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                                      {{ pokemonDetails.height.imperial }}
+                                    </div>
+                                  </div>
+                                  <span
+                                    v-else
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                  >
+                                    N/A
+                                  </span>
+                                </Transition>
+                              </div>
+
+                              <!-- Visual Height Comparison (Trainer vs Pokemon silhouettes) -->
+                              <div
+                                v-if="pokemonDetails.height && pokemon"
+                                class="relative h-32 bg-gradient-to-t from-blue-100/50 to-transparent dark:from-blue-900/20 dark:to-transparent rounded-lg p-3 pb-6"
+                              >
+                                <!-- Ground line -->
+                                <div class="absolute bottom-6 left-0 right-0 h-0.5 bg-blue-300 dark:bg-blue-700" />
+
+                                <!-- Trainer silhouette (1.7m reference) -->
+                                <div
+                                  class="absolute bottom-6 left-6 flex flex-col items-center gap-1 transition-transform duration-300 group-hover:scale-105"
+                                  :style="{ height: `${Math.min(90, (1.7 / Math.max(pokemonHeightInMeters, 1.7)) * 90)}px` }"
+                                >
+                                  <img
+                                    src="~/assets/images/sprite_red_trainer.png"
+                                    alt="Trainer Red"
+                                    class="w-full h-full object-contain brightness-0 dark:brightness-100 opacity-80 pixelated"
+                                  >
+                                  <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">1.7m</span>
+                                </div>
+
+                                <!-- Pokemon silhouette -->
+                                <div
+                                  class="absolute bottom-6 right-6 flex flex-col items-center gap-1 transition-transform duration-300 group-hover:scale-105"
+                                  :style="{ height: `${Math.min(90, (pokemonHeightInMeters / Math.max(pokemonHeightInMeters, 1.7)) * 90)}px` }"
+                                >
+                                  <img
+                                    :src="currentSprite"
+                                    :alt="pokemon.name"
+                                    class="w-full h-full object-contain brightness-0 dark:brightness-100 opacity-80"
+                                  >
+                                  <span class="text-[10px] font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                                    {{ pokemonDetails.height.metric }}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <span class="font-bold text-gray-900 dark:text-white">
-                              Coming Soon
-                            </span>
                           </div>
 
                           <!-- Weight -->
-                          <div class="flex items-center justify-between p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
-                            <div class="flex items-center gap-3">
-                              <Icon
-                                icon="ph:scales-bold"
-                                class="w-5 h-5 text-purple-500"
-                              />
-                              <span class="font-medium text-gray-700 dark:text-gray-300">Weight</span>
+                          <div class="group relative overflow-hidden p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                            <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div class="relative flex items-center justify-between">
+                              <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-lg bg-purple-500/20 dark:bg-purple-500/30 group-hover:scale-110 transition-transform duration-300">
+                                  <Icon
+                                    icon="ph:scales-bold"
+                                    class="w-5 h-5 text-purple-600 dark:text-purple-400"
+                                  />
+                                </div>
+                                <span class="font-semibold text-gray-700 dark:text-gray-300">Weight</span>
+                              </div>
+                              <div class="text-right">
+                                <Transition
+                                  mode="out-in"
+                                  enter-active-class="transition duration-200 ease-out"
+                                  enter-from-class="opacity-0 scale-90"
+                                  enter-to-class="opacity-100 scale-100"
+                                  leave-active-class="transition duration-150 ease-in"
+                                  leave-from-class="opacity-100 scale-100"
+                                  leave-to-class="opacity-0 scale-90"
+                                >
+                                  <div
+                                    v-if="pokemonDetails.loading"
+                                    class="flex items-center gap-2"
+                                  >
+                                    <div class="w-3 h-3 rounded-full bg-purple-500 animate-pulse" />
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
+                                  </div>
+                                  <div
+                                    v-else-if="pokemonDetails.weight"
+                                    class="space-y-0.5"
+                                  >
+                                    <div class="font-bold text-lg text-gray-900 dark:text-white">
+                                      {{ pokemonDetails.weight.metric }}
+                                    </div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                                      {{ pokemonDetails.weight.imperial }}
+                                    </div>
+                                  </div>
+                                  <span
+                                    v-else
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                  >
+                                    N/A
+                                  </span>
+                                </Transition>
+                              </div>
                             </div>
-                            <span class="font-bold text-gray-900 dark:text-white">
-                              Coming Soon
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -688,3 +849,12 @@ onUnmounted(() => {
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+/* Preserve pixel art crispness for trainer and Pokemon sprites */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+</style>
