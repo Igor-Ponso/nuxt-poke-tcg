@@ -62,12 +62,12 @@ const navigationSections = [
     available: false,
   },
   {
-    title: 'Type Charts',
+    title: 'Type Chart',
     description: 'Type effectiveness',
-    icon: 'ph:chart-bar-bold',
-    route: '/type-charts',
+    icon: 'ph:grid-four-bold',
+    route: '/type-chart',
     color: 'from-teal-500 to-cyan-500',
-    available: false,
+    available: true,
   },
 ]
 

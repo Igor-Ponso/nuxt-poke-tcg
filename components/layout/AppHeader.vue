@@ -67,6 +67,12 @@ const navLinks = computed(() => [
     active: route.path.startsWith('/pokedex'),
   },
   {
+    path: '/type-chart',
+    label: 'Type Chart',
+    icon: 'ph:grid-four',
+    active: route.path === '/type-chart',
+  },
+  {
     path: '/tcg',
     label: 'TCG Gallery',
     icon: 'ph:cards',
