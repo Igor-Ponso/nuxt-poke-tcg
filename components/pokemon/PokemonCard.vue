@@ -30,6 +30,7 @@ const { getGameSprite } = useGameSprites()
 
 // Full Pokemon data (needed for game sprites)
 const fullPokemon = ref<Pokemon | null>(null)
+const isCardVisible = ref(false)
 
 const props = withDefaults(defineProps<PokemonCardProps>(), {
   size: 'md',
@@ -44,19 +45,6 @@ const props = withDefaults(defineProps<PokemonCardProps>(), {
 
 // Computed property to get selected form from store
 const selectedForm = computed(() => formsStore.getSelectedForm(props.pokemon.id))
-
-// Fetch full Pokemon data when game version is selected
-watch(() => pokemonStore.selectedGameVersion, async (newVersion) => {
-  if (newVersion && !fullPokemon.value) {
-    try {
-      const api = usePokemonApi()
-      fullPokemon.value = await api.fetchPokemon(props.pokemon.id)
-    }
-    catch (error) {
-      console.error('Failed to fetch full Pokemon data:', error)
-    }
-  }
-}, { immediate: true })
 
 const emit = defineEmits<{
   click: [pokemon: SimplifiedPokemon, selectedForm: PokemonForm | null]
@@ -95,6 +83,48 @@ const {
   type: props.holographicType,
   intensity: 1,
   speed: 1,
+})
+
+/**
+ * Intersection Observer - Lazy load full Pokemon data
+ */
+const { stop } = useIntersectionObserver(
+  cardRef,
+  ([{ isIntersecting }]) => {
+    if (isIntersecting && !isCardVisible.value) {
+      isCardVisible.value = true
+      // Fetch full Pokemon data when card becomes visible and game version is selected
+      if (pokemonStore.selectedGameVersion && !fullPokemon.value) {
+        fetchFullPokemon()
+      }
+    }
+  },
+  {
+    rootMargin: '100px', // Start loading slightly before card is visible
+  },
+)
+
+// Fetch full Pokemon data
+async function fetchFullPokemon() {
+  try {
+    const api = usePokemonApi()
+    fullPokemon.value = await api.fetchPokemon(props.pokemon.id)
+  }
+  catch (error) {
+    console.error('Failed to fetch full Pokemon data:', error)
+  }
+}
+
+// Watch for game version changes
+watch(() => pokemonStore.selectedGameVersion, async (newVersion) => {
+  if (newVersion && !fullPokemon.value && isCardVisible.value) {
+    await fetchFullPokemon()
+  }
+})
+
+// Cleanup observer on unmount
+onUnmounted(() => {
+  stop()
 })
 
 /**

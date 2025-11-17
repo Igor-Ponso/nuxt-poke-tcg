@@ -17,7 +17,71 @@ const route = useRoute()
 const selectedPokemon = ref<SimplifiedPokemon | null>(null)
 const showPokemonModal = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
-const selectedGeneration = ref(0) // 0 = All generations
+const selectedGeneration = ref(1) // Default to Kanto (Gen 1)
+
+// Virtual scrolling with chunks for grid layout
+const ITEMS_PER_ROW = 4 // xl:grid-cols-4
+const ROW_HEIGHT = 450 // Approximate height of card row in px (card ~380px + gap 24px + margin)
+const OVERSCAN_ROWS = 3 // Extra rows to render above/below viewport (3 rows = ~1350px buffer)
+
+const scrollY = ref(0)
+const containerHeight = ref(0)
+
+// Calculate visible range based on scroll position
+const visibleRange = computed(() => {
+  // First visible row (top of viewport)
+  const firstVisibleRow = Math.floor(scrollY.value / ROW_HEIGHT)
+
+  // Last visible row (bottom of viewport)
+  const lastVisibleRow = Math.ceil((scrollY.value + containerHeight.value) / ROW_HEIGHT)
+
+  // Add overscan: 3 rows before first visible, 3 rows after last visible
+  const startRow = Math.max(0, firstVisibleRow - OVERSCAN_ROWS)
+  const endRow = lastVisibleRow + OVERSCAN_ROWS
+
+  const startIndex = startRow * ITEMS_PER_ROW
+  const endIndex = Math.min(endRow * ITEMS_PER_ROW, pokemonStore.filteredPokemons.length)
+
+  return { startIndex, endIndex, startRow }
+})
+
+// Only render visible Pokemon
+const visiblePokemons = computed(() => {
+  const { startIndex, endIndex } = visibleRange.value
+  return pokemonStore.filteredPokemons.slice(startIndex, endIndex).map((pokemon, index) => ({
+    pokemon,
+    actualIndex: startIndex + index,
+  }))
+})
+
+// Total height needed for the virtual scroll container
+const totalHeight = computed(() => {
+  const totalRows = Math.ceil(pokemonStore.filteredPokemons.length / ITEMS_PER_ROW)
+  return totalRows * ROW_HEIGHT
+})
+
+// Offset from top
+const offsetY = computed(() => {
+  return visibleRange.value.startRow * ROW_HEIGHT
+})
+
+// Track scroll position
+const { y: scrollYFromUse } = useScroll(typeof window !== 'undefined' ? window : null)
+watch(scrollYFromUse, (newY) => {
+  scrollY.value = newY
+})
+
+// Track viewport height
+onMounted(() => {
+  const updateHeight = () => {
+    containerHeight.value = window.innerHeight
+  }
+  updateHeight()
+  window.addEventListener('resize', updateHeight)
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateHeight)
+  })
+})
 
 // Infinite scroll observer
 let observer: IntersectionObserver | null = null
@@ -25,6 +89,9 @@ let observer: IntersectionObserver | null = null
 // Initialize store
 onMounted(async () => {
   await pokemonStore.initialize()
+
+  // Load Kanto (Gen 1) by default on first load
+  await pokemonStore.fetchByGeneration(1)
 
   // Apply query params if present
   if (route.query.search) {
@@ -190,16 +257,24 @@ async function handleGenerationChange(genId: number) {
       v-else
       class="space-y-6"
     >
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <PokemonCard
-          v-for="pokemon in pokemonStore.filteredPokemons"
-          :key="pokemon.id"
-          :pokemon="pokemon"
-          size="md"
-          :favorited="pokemonStore.isFavorite(pokemon.id)"
-          @click="handlePokemonClick(pokemon)"
-          @favorite="pokemonStore.toggleFavorite(pokemon)"
-        />
+      <!-- Virtual scrolling container -->
+      <div
+        :style="{ height: `${totalHeight}px`, position: 'relative' }"
+      >
+        <div
+          :style="{ transform: `translateY(${offsetY}px)` }"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          <PokemonCard
+            v-for="{ pokemon, actualIndex } in visiblePokemons"
+            :key="`${pokemon.id}-${actualIndex}`"
+            :pokemon="pokemon"
+            size="md"
+            :favorited="pokemonStore.isFavorite(pokemon.id)"
+            @click="handlePokemonClick(pokemon)"
+            @favorite="pokemonStore.toggleFavorite(pokemon)"
+          />
+        </div>
       </div>
 
       <!-- Infinite Scroll Trigger -->

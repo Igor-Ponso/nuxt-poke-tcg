@@ -35,6 +35,21 @@ export interface Pokemon3DData {
 // API returns an array directly, not wrapped in an object
 export type Pokemon3DResponse = Pokemon3DData[]
 
+// Concurrency guard & rate limit state (shared across composable instances)
+let pokemon3DAllPromise: Promise<Pokemon3DResponse> | null = null
+let pokemon3DAllData: Pokemon3DResponse | null = null
+let pokemon3DRateLimitUntil = 0 // timestamp (ms) until we should retry network fetch
+
+function isRateLimitError(error: any): boolean {
+  if (!error) return false
+  // $fetch errors may contain status / response.status or message with 429
+  return error.status === 429 || error?.response?.status === 429 || /429/.test(String(error.message))
+}
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 export function usePokemon3D() {
   const BASE_URL = 'https://pokemon-3d-api.onrender.com/v1'
   const CDN_BASE = 'https://raw.githubusercontent.com/Sudhanshu-Ambastha/Pokemon-3D-api/main/models/opt'
@@ -48,14 +63,64 @@ export function usePokemon3D() {
       prefix: 'pokemon3d',
     })
 
+    const now = Date.now()
+    // If we were rate limited recently AND have previous data, serve it immediately
+    if (pokemon3DRateLimitUntil > now && pokemon3DAllData) {
+      return pokemon3DAllData
+    }
+
     const cached = cache.get()
     if (cached) {
+      // Store in shared memory for quick reuse while navigating
+      pokemon3DAllData = cached
       return cached
     }
 
-    const response = await $fetch<Pokemon3DResponse>(`${BASE_URL}/pokemon`)
-    cache.set(response)
-    return response
+    // Coalesce concurrent requests
+    if (pokemon3DAllPromise) {
+      return pokemon3DAllPromise
+    }
+
+    pokemon3DAllPromise = (async () => {
+      const maxAttempts = 3
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const response = await $fetch<Pokemon3DResponse>(`${BASE_URL}/pokemon`)
+          cache.set(response)
+          pokemon3DAllData = response
+          return response
+        }
+        catch (error) {
+          if (isRateLimitError(error)) {
+            // Simple backoff: 500ms * attempt number
+            const backoff = 500 * attempt
+            console.warn(`[usePokemon3D] Rate limited (attempt ${attempt}/${maxAttempts}). Backing off ${backoff}ms.`)
+            // Set rate limit window (1s * attempt as heuristic)
+            pokemon3DRateLimitUntil = Date.now() + 1000 * attempt
+            if (attempt < maxAttempts) {
+              await sleep(backoff)
+              continue
+            }
+            // Exhausted attempts: return last known data if available
+            if (pokemon3DAllData) {
+              console.warn('[usePokemon3D] Using previously cached 3D data after repeated 429 responses.')
+              return pokemon3DAllData
+            }
+          }
+          // Non-rate limit error or no fallback data: rethrow
+          throw error
+        }
+      }
+      // Should not reach here; return fallback
+      return pokemon3DAllData || []
+    })()
+
+    try {
+      return await pokemon3DAllPromise
+    }
+    finally {
+      pokemon3DAllPromise = null
+    }
   }
 
   /**

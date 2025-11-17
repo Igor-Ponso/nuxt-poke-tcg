@@ -49,6 +49,9 @@ const isLoading = ref(true)
 const hasError = ref(false)
 const errorMessage = ref('')
 const modelViewerRef = ref<HTMLElement | null>(null)
+// Fallback handling: keep last successfully loaded model if new one fails (e.g. 429 rate limit upstream)
+const lastSuccessfulModelUrl = ref<string | null>(null)
+const fallbackModelUrl = ref<string | null>(null)
 // Use 'auto' for automatic framing based on model dimensions
 const cameraOrbit = ref('0deg 75deg auto')
 
@@ -56,6 +59,10 @@ const cameraOrbit = ref('0deg 75deg auto')
  * Computed model URL based on current form or direct URL
  */
 const modelUrl = computed(() => {
+  // If we have a fallback (due to error), prefer it
+  if (fallbackModelUrl.value) {
+    return fallbackModelUrl.value
+  }
   // Use direct model URL if provided (overrides form-based lookup)
   if (props.modelUrl) {
     return props.modelUrl
@@ -79,6 +86,10 @@ function toggleForm() {
 function handleLoad() {
   isLoading.value = false
   hasError.value = false
+  // Store successful model for potential fallback usage later
+  lastSuccessfulModelUrl.value = modelUrl.value
+  // Clear any previous fallback (we have a fresh successful load)
+  fallbackModelUrl.value = null
 
   if (modelViewerRef.value) {
     // Type cast to access model-viewer specific properties
@@ -111,6 +122,15 @@ function handleLoad() {
  */
 function handleError(event: Event) {
   isLoading.value = false
+  // If we have a previously loaded model, keep showing it silently
+  if (lastSuccessfulModelUrl.value) {
+    // Set fallback so computed modelUrl uses previous asset
+    fallbackModelUrl.value = lastSuccessfulModelUrl.value
+    hasError.value = false
+    errorMessage.value = ''
+    console.warn('[Pokemon3DViewer] Model load failed; reusing last successful model.', event)
+    return
+  }
   hasError.value = true
   errorMessage.value = 'Failed to load 3D model'
   emit('error', new Error(errorMessage.value))
@@ -124,6 +144,9 @@ watch(() => props.pokemonId, () => {
   isLoading.value = true
   hasError.value = false
   currentForm.value = props.form
+  // Reset fallback when switching Pokemon; we'll attempt fresh load
+  fallbackModelUrl.value = null
+  lastSuccessfulModelUrl.value = null
 })
 </script>
 
