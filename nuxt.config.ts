@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  // Configure for GitHub Pages deployment
 
   modules: [
     '@nuxtjs/tailwindcss',
@@ -8,7 +9,7 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/eslint',
   ],
-
+  ssr: false,
   components: [
     {
       path: '~/components',
@@ -28,6 +29,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   app: {
+    baseURL: process.env.NODE_ENV === 'production' ? '/nuxt-poke-tcg/' : '/',
     head: {
       title: 'Nuxt Poké TCG',
       htmlAttrs: {
