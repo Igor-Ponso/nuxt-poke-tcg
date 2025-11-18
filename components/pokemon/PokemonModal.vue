@@ -886,7 +886,7 @@ onUnmounted(() => {
                                   :style="{ height: `${Math.min(90, (1.7 / Math.max(pokemonHeightInMeters, 1.7)) * 90)}px` }"
                                 >
                                   <img
-                                    src="~/assets/images/sprite_red_trainer.png"
+                                    src="/images/sprite_red_trainer.png"
                                     alt="Trainer Red"
                                     class="w-full h-full object-contain brightness-0 dark:brightness-100 opacity-80 pixelated"
                                   >
