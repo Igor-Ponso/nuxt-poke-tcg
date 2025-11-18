@@ -19,7 +19,7 @@
  * Based on @vueuse/core useVirtualList with grid enhancements
  */
 
-import type { ComputedRef, CSSProperties, Ref } from 'vue'
+import type { ComponentPublicInstance, ComputedRef, CSSProperties, Ref } from 'vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 export interface VirtualGridOptions {
@@ -90,9 +90,10 @@ export interface VirtualGridReturn<T> {
   /**
    * Wrapper props to bind to inner wrapper
    * Creates the total scrollable height
-   * Usage: <div v-bind="wrapperProps">
+   * Usage: <div v-bind="wrapperProps" ref="gridContainerRef">
    */
   wrapperProps: ComputedRef<{
+    ref: (el: Element | ComponentPublicInstance | null) => void
     style: CSSProperties
   }>
 
@@ -140,7 +141,7 @@ export interface VirtualGridReturn<T> {
 /**
  * Create a virtual grid with high performance
  */
-export function useVirtualGrid<T = any>(
+export function useVirtualGrid<T = unknown>(
   items: Ref<T[]>,
   options: VirtualGridOptions = {},
 ): VirtualGridReturn<T> {
@@ -212,15 +213,41 @@ export function useVirtualGrid<T = any>(
   })
 
   /**
+   * Get the grid container's offset from the top of the page
+   * This is crucial when there's dynamic content above the grid
+   */
+  const gridContainerTop = ref(0)
+  const gridContainerElement = ref<HTMLElement | null>(null)
+
+  /**
+   * Update grid container's top position
+   */
+  function updateGridContainerPosition() {
+    if (gridContainerElement.value) {
+      const rect = gridContainerElement.value.getBoundingClientRect()
+      gridContainerTop.value = rect.top + (window.scrollY || window.pageYOffset)
+
+      if (debug) {
+        console.log('[VirtualGrid] Grid container position updated:', gridContainerTop.value)
+      }
+    }
+  }
+
+  /**
    * Calculate which rows are visible
    */
   const visibleRange = computed(() => {
     const scrollValue = scrollTop.value
     const containerHeightValue = containerHeight.value
+    const gridTop = gridContainerTop.value
+
+    // Adjust scroll value relative to grid container
+    // If we're scrolled above or at the grid container, start from row 0
+    const relativeScroll = Math.max(0, scrollValue - gridTop)
 
     // Calculate visible rows
-    const startRow = Math.floor(scrollValue / rowHeight.value)
-    const endRow = Math.ceil((scrollValue + containerHeightValue) / rowHeight.value)
+    const startRow = Math.floor(relativeScroll / rowHeight.value)
+    const endRow = Math.ceil((relativeScroll + containerHeightValue) / rowHeight.value)
 
     // Add overscan (buffer above and below)
     const overscanRows = overscan
@@ -229,6 +256,9 @@ export function useVirtualGrid<T = any>(
 
     if (debug) {
       console.log('[VirtualGrid] Visible range:', {
+        scrollValue,
+        gridTop,
+        relativeScroll,
         startRow,
         endRow,
         bufferedStartRow,
@@ -313,12 +343,23 @@ export function useVirtualGrid<T = any>(
 
   /**
    * Manually trigger recalculation
+   * Forces re-evaluation of scroll position and visible range
    */
   function recalculate() {
     handleResize()
+    updateGridContainerPosition()
+    // Force update scroll position
+    if (typeof window !== 'undefined') {
+      scrollTop.value = window.scrollY || window.pageYOffset
+    }
     nextTick(() => {
       if (debug) {
-        console.log('[VirtualGrid] Recalculated')
+        console.log('[VirtualGrid] Recalculated', {
+          scrollTop: scrollTop.value,
+          gridContainerTop: gridContainerTop.value,
+          containerHeight: containerHeight.value,
+          visibleRange: visibleRange.value,
+        })
       }
     })
   }
@@ -336,7 +377,16 @@ export function useVirtualGrid<T = any>(
   /**
    * Wrapper props (creates total scrollable height)
    */
-  const wrapperProps = computed<{ style: CSSProperties }>(() => ({
+  const wrapperProps = computed<{ ref: (el: Element | ComponentPublicInstance | null) => void, style: CSSProperties }>(() => ({
+    ref: (el: Element | ComponentPublicInstance | null) => {
+      gridContainerElement.value = el as HTMLElement | null
+      if (el) {
+        // Update position immediately when element is mounted
+        nextTick(() => {
+          updateGridContainerPosition()
+        })
+      }
+    },
     style: {
       height: `${totalHeight.value}px`,
       position: 'relative' as const,
@@ -371,6 +421,43 @@ export function useVirtualGrid<T = any>(
       // Initial scroll position
       scrollTop.value = window.scrollY || window.pageYOffset
       containerHeight.value = window.innerHeight
+
+      // Use ResizeObserver to detect layout changes (e.g., when filters expand/collapse)
+      // This fixes the bug where cards disappear when selectors expand
+      const resizeObserver = new ResizeObserver((entries) => {
+        // Only recalculate if there's a significant height change
+        for (const entry of entries) {
+          const heightChange = Math.abs(entry.contentRect.height - containerHeight.value)
+
+          // If height changed by more than 50px, recalculate
+          if (heightChange > 50) {
+            nextTick(() => {
+              // Update grid container position (crucial for dynamic content above grid)
+              updateGridContainerPosition()
+              scrollTop.value = window.scrollY || window.pageYOffset
+              handleResize()
+
+              if (debug) {
+                console.log('[VirtualGrid] Layout changed significantly, recalculating:', {
+                  heightChange,
+                  newScrollTop: scrollTop.value,
+                  gridContainerTop: gridContainerTop.value,
+                  visibleRange: visibleRange.value,
+                })
+              }
+            })
+            break
+          }
+        }
+      })
+
+      // Observe the body for layout changes
+      resizeObserver.observe(document.body)
+
+      // Cleanup observer on unmount
+      onUnmounted(() => {
+        resizeObserver.disconnect()
+      })
     }
 
     if (debug) {
