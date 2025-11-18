@@ -23,27 +23,27 @@ const emit = defineEmits<{
   'update:form': [form: PokemonForm | null]
 }>()
 
-const { getAvailableFormsForPokemon, getEnglishFormName } = usePokemonForms()
+const { getEnglishFormName } = usePokemonForms()
+const { getFormsWithCache } = usePokemonFormsCache()
 
 const availableForms = ref<PokemonForm[]>([])
 const isOpen = ref(false)
 const isLoading = ref(false)
+const formsLoaded = ref(false)
 
 /**
- * Load available forms on mount
- */
-onMounted(async () => {
-  await loadForms()
-})
-
-/**
- * Load forms for this Pokemon
+ * Load forms for this Pokemon - LAZY LOADED only when dropdown is opened
+ * Uses centralized cache to avoid duplicate requests
  */
 async function loadForms() {
+  // Skip if already loaded
+  if (formsLoaded.value) return
+
   isLoading.value = true
   try {
-    const forms = await getAvailableFormsForPokemon(props.pokemonId)
+    const forms = await getFormsWithCache(props.pokemonId)
     availableForms.value = forms
+    formsLoaded.value = true
   }
   catch (error) {
     console.error('Failed to load Pokemon forms:', error)
@@ -103,9 +103,13 @@ function resetForm() {
 }
 
 /**
- * Toggle dropdown
+ * Toggle dropdown - Load forms on first open
  */
-function toggleDropdown() {
+async function toggleDropdown() {
+  // Load forms on first open (lazy loading)
+  if (!isOpen.value && !formsLoaded.value) {
+    await loadForms()
+  }
   isOpen.value = !isOpen.value
 }
 

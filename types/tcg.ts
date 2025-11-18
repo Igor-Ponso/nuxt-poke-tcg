@@ -325,7 +325,7 @@ export interface CardDisplayMode {
  * Holographic effect configuration
  */
 export interface HolographicConfig {
-  enabled: boolean
+  enabled: boolean | import('vue').Ref<boolean>
   intensity: number // 0-1
   speed: number // animation speed multiplier
   type: 'standard' | 'reverse' | 'cosmos' | 'radial' | 'prism'

@@ -534,3 +534,27 @@ export interface PokemonCardData extends SimplifiedPokemon {
     type: PokemonType
   }[]
 }
+
+export interface SimplifiedAbility {
+  id: number
+  name: string
+  description: string
+  shortEffect: string
+  generation: string
+  pokemonCount: number
+  isMainSeries: boolean
+}
+
+export interface SimplifiedMove {
+  id: number
+  name: string
+  type: PokemonType
+  category: 'physical' | 'special' | 'status'
+  power: number | null
+  accuracy: number | null
+  pp: number
+  description: string
+  shortEffect: string
+  generation: string
+  learnedByCount: number
+}

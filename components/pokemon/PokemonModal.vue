@@ -9,7 +9,7 @@ import { Icon } from '@iconify/vue'
 import type { Tab } from '~/components/ui/UiTabs.vue'
 import type { Pokemon3DModel } from '~/composables/pokemon/usePokemon3D'
 import type { PokemonForm } from '~/composables/pokemon/usePokemonForms'
-import type { SimplifiedPokemon, Pokemon, PokemonSpecies, FlavorText, Ability } from '~/types'
+import type { Ability, FlavorText, Pokemon, PokemonSpecies, SimplifiedPokemon } from '~/types'
 
 const props = defineProps<{
   pokemon: SimplifiedPokemon | null
@@ -183,6 +183,7 @@ const hasNext = computed(() => {
 function navigatePrevious() {
   if (!hasPrevious.value || !props.pokemonList) return
   const previousPokemon = props.pokemonList[currentIndex.value - 1]
+  if (!previousPokemon) return
   emit('navigate', previousPokemon)
 }
 
@@ -192,6 +193,7 @@ function navigatePrevious() {
 function navigateNext() {
   if (!hasNext.value || !props.pokemonList) return
   const nextPokemon = props.pokemonList[currentIndex.value + 1]
+  if (!nextPokemon) return
   emit('navigate', nextPokemon)
 }
 
@@ -246,19 +248,16 @@ const pokemonHeightInMeters = computed(() => {
  * Get the most recent English flavor text from species data
  */
 const flavorText = computed(() => {
-  if (!pokemonDetails.value.species?.flavor_text_entries) return ''
+  const entries = pokemonDetails.value.species?.flavor_text_entries
+  if (!entries) return ''
 
-  // Find the most recent English flavor text entry
-  const englishEntries = pokemonDetails.value.species.flavor_text_entries
-    .filter((entry: FlavorText) => entry.language.name === 'en')
-
+  const englishEntries = entries.filter((entry: FlavorText) => entry.language.name === 'en')
   if (englishEntries.length === 0) return ''
 
-  // Get the latest entry (they're usually ordered by version)
   const latestEntry = englishEntries[englishEntries.length - 1]
-
-  // Clean up the flavor text (remove form feeds and extra whitespace)
-  return latestEntry.flavor_text
+  const raw = latestEntry?.flavor_text
+  if (!raw) return ''
+  return raw
     .replace(/\f/g, ' ')
     .replace(/\n/g, ' ')
     .replace(/\s+/g, ' ')
@@ -431,8 +430,8 @@ function triggerAnimations() {
  */
 useIntersectionObserver(
   physicalInfoSection,
-  ([{ isIntersecting }]) => {
-    if (isIntersecting && !hasAnimated.value) {
+  ([entry]) => {
+    if (entry?.isIntersecting && !hasAnimated.value) {
       triggerAnimations()
     }
   },

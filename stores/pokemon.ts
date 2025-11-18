@@ -6,7 +6,7 @@
  */
 
 import { defineStore } from 'pinia'
-import type { SimplifiedPokemon, PokemonCardData, PokemonType } from '~/types'
+import type { PokemonCardData, PokemonType, SimplifiedPokemon } from '~/types'
 import { GENERATIONS } from '~/utils/constants'
 
 interface PokemonState {
@@ -263,7 +263,8 @@ export const usePokemonStore = defineStore('pokemon', {
         this.pokemons.push(...simplified)
 
         // Update hasMore status
-        this.hasMore = this.pokemons[this.pokemons.length - 1].id < this.totalCount
+        const last = this.pokemons.at(-1)
+        this.hasMore = !!last && last.id < this.totalCount
       }
       catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to load more Pokemon'

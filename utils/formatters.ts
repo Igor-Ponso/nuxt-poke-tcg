@@ -64,10 +64,14 @@ export function toTitleCase(str: string): string {
 
   // Handle mega evolutions
   if (lower.includes('mega-')) {
-    const parts = lower.split('-')
-    const name = capitalize(parts[1])
-    if (parts.length === 3) {
-      return `Mega ${name} ${parts[2].toUpperCase()}`
+    const parts = lower.split('-').filter(Boolean)
+    if (parts.length < 2) {
+      return 'Mega'
+    }
+    const name = capitalize(parts[1] || '')
+    if (parts.length >= 3) {
+      const suffix = parts[2] ? parts[2].toUpperCase() : ''
+      return suffix ? `Mega ${name} ${suffix}` : `Mega ${name}`
     }
     return `Mega ${name}`
   }
@@ -416,5 +420,5 @@ export function slugify(text: string): string {
  */
 export function extractIdFromUrl(url: string): number {
   const match = url.match(/\/(\d+)\/$/)
-  return match ? Number.parseInt(match[1], 10) : 0
+  return match?.[1] ? Number.parseInt(match[1], 10) : 0
 }

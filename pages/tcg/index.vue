@@ -72,7 +72,8 @@ onMounted(async () => {
 
   // Infinite scroll observer
   const observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && tcgStore.hasMore && !tcgStore.loading) {
+    const first = entries[0]
+    if (first?.isIntersecting && tcgStore.hasMore && !tcgStore.loading) {
       loadMore()
     }
   }, { threshold: 0.5 })

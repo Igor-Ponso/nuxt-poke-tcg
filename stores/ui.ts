@@ -133,7 +133,7 @@ export const useUIStore = defineStore('ui', {
      */
     closeModal() {
       const modal = this.modals.pop()
-      if (modal?.onClose) {
+      if (modal && modal.onClose) {
         modal.onClose()
       }
     },
@@ -146,7 +146,7 @@ export const useUIStore = defineStore('ui', {
       if (index >= 0) {
         const modal = this.modals[index]
         this.modals.splice(index, 1)
-        if (modal.onClose) {
+        if (modal && modal.onClose) {
           modal.onClose()
         }
       }
@@ -157,7 +157,7 @@ export const useUIStore = defineStore('ui', {
      */
     closeAllModals() {
       this.modals.forEach((modal) => {
-        if (modal.onClose) {
+        if (modal && modal.onClose) {
           modal.onClose()
         }
       })

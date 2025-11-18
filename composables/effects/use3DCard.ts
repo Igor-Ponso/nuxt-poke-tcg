@@ -5,7 +5,7 @@
  * Based on mouse movement with spring physics for smooth animation
  */
 
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, isRef } from 'vue'
 import type { Ref } from 'vue'
 
 export interface Card3DOptions {
@@ -15,6 +15,7 @@ export interface Card3DOptions {
   speed?: number // Animation speed (default: 400ms)
   easing?: string // CSS easing function
   disableOnMobile?: boolean // Disable on touch devices
+  enabled?: Ref<boolean> | boolean // Enable/disable effect dynamically
 }
 
 export interface Card3DState {
@@ -36,7 +37,11 @@ export function use3DCard(
     speed = 400,
     easing = 'cubic-bezier(0.03, 0.98, 0.52, 0.99)',
     disableOnMobile = true,
+    enabled = true,
   } = options
+
+  // Convert enabled to ref if it's a boolean
+  const isEnabled = isRef(enabled) ? enabled : ref(enabled)
 
   // State
   const rotateX = ref(0)
@@ -97,7 +102,7 @@ export function use3DCard(
    * Handles mouse move on card (optimized with RAF throttling)
    */
   function handleMouseMove(event: MouseEvent) {
-    if (!elementRef.value) return
+    if (!elementRef.value || !isEnabled.value) return
 
     const rect = getRect()
     if (!rect) return
@@ -141,6 +146,7 @@ export function use3DCard(
    * Handles mouse enter
    */
   function handleMouseEnter() {
+    if (!isEnabled.value) return
     isHovering.value = true
     // Clear cache on hover start for accurate positioning
     cachedRect = null
@@ -199,7 +205,7 @@ export function use3DCard(
    * Setup event listeners
    */
   function setupListeners() {
-    if (!elementRef.value) return
+    if (!elementRef.value || !isEnabled.value) return
 
     elementRef.value.addEventListener('mouseenter', handleMouseEnter, { passive: true })
     elementRef.value.addEventListener('mousemove', handleMouseMove, { passive: true })
@@ -227,11 +233,25 @@ export function use3DCard(
     }
   }
 
+  // Watch enabled state to add/remove listeners
+  watch(isEnabled, (enabled) => {
+    if (enabled) {
+      setupListeners()
+    }
+    else {
+      removeListeners()
+      // Reset to neutral state when disabled
+      handleMouseLeave()
+    }
+  })
+
   // Lifecycle
   onMounted(() => {
     // Use nextTick to ensure element is in DOM
     nextTick(() => {
-      setupListeners()
+      if (isEnabled.value) {
+        setupListeners()
+      }
     })
   })
 

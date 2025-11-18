@@ -96,6 +96,8 @@ export type {
   // Custom App Types
   SimplifiedPokemon,
   PokemonCardData,
+  SimplifiedAbility,
+  SimplifiedMove,
 } from './pokemon'
 
 // ============================================================================

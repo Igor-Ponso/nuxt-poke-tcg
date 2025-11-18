@@ -59,7 +59,18 @@ const isPlayingCry = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
 
 /**
+ * Card Visibility - Manages when effects should be active
+ * This prevents off-screen cards from running expensive animations
+ */
+const { shouldRenderEffects } = useCardVisibility(cardRef, {
+  rootMargin: '300px', // Start loading effects 300px before visible
+  threshold: 0.01,
+  disableDelay: 200, // Wait 200ms before disabling to prevent flickering
+})
+
+/**
  * 3D Card Effect - Enhanced for stronger hover
+ * Now controlled by visibility state for performance
  */
 const {
   transformStyle,
@@ -69,17 +80,22 @@ const {
   maxRotate: 20,
   perspective: 1200,
   scale: 1.12,
+  enabled: shouldRenderEffects, // Disable when card is off-screen
 })
 
 /**
  * Holographic Effect (if enabled)
+ * Now controlled by visibility state for performance
  */
+// Computed enabled state for holographic effect
+const holoEnabled = computed(() => props.holographic && shouldRenderEffects.value)
+
 const {
   cssVariables: holoVariables,
   holographicGradient,
   isActive: holoActive,
 } = useHolographic(cardRef, {
-  enabled: props.holographic,
+  enabled: holoEnabled,
   type: props.holographicType,
   intensity: 1,
   speed: 1,
@@ -87,11 +103,12 @@ const {
 
 /**
  * Intersection Observer - Lazy load full Pokemon data
+ * Only fetch when card is actually in viewport to reduce API calls
  */
 const { stop } = useIntersectionObserver(
   cardRef,
-  ([{ isIntersecting }]) => {
-    if (isIntersecting && !isCardVisible.value) {
+  ([entry]) => {
+    if (entry?.isIntersecting && !isCardVisible.value) {
       isCardVisible.value = true
       // Fetch full Pokemon data when card becomes visible and game version is selected
       if (pokemonStore.selectedGameVersion && !fullPokemon.value) {
@@ -100,7 +117,8 @@ const { stop } = useIntersectionObserver(
     }
   },
   {
-    rootMargin: '100px', // Start loading slightly before card is visible
+    rootMargin: '200px', // Start loading before card is visible for smoother experience
+    threshold: 0.01, // Trigger as soon as 1% is visible
   },
 )
 
@@ -138,6 +156,7 @@ const typeGradient = computed(() => {
 
 /**
  * Computed card class
+ * Added CSS containment for better rendering performance
  */
 const cardClass = computed(() => {
   const baseClasses = [
@@ -147,6 +166,9 @@ const cardClass = computed(() => {
     'transition-shadow',
     'duration-200',
     'w-full',
+    // Performance optimizations
+    'will-change-auto', // Only use will-change when hovering
+    '[contain:layout_style_paint]', // CSS containment for better performance
   ]
 
   // Size - Responsive with max-width
@@ -181,7 +203,6 @@ const cardClass = computed(() => {
  */
 const cardStyle = computed(() => {
   const styles = {
-    willChange: 'transform',
     ...transformStyle.value,
   }
 

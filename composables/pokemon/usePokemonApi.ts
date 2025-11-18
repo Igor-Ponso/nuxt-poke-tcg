@@ -6,14 +6,14 @@
  */
 
 import type {
+  Ability,
+  EvolutionChain,
+  NamedAPIResourceList,
   Pokemon,
+  PokemonCardData,
   PokemonSpecies,
   PokemonType,
-  EvolutionChain,
   SimplifiedPokemon,
-  PokemonCardData,
-  NamedAPIResourceList,
-  Ability,
 } from '~/types'
 
 export function usePokemonApi() {
@@ -159,7 +159,7 @@ export function usePokemonApi() {
         return {
           name: formatPokemonName(m.move.name),
           power: null,
-          type: simplified.types[0], // Use primary type as placeholder
+          type: simplified.types[0] ?? 'normal', // Fallback ensures non-undefined
         }
       })
       .slice(0, 4)

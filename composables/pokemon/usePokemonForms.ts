@@ -129,6 +129,7 @@ export function usePokemonForms() {
       // INCLUDE: charizard-mega-x, charizard-mega-y (form contains "-mega")
       // EXCLUDE: meganium (base name contains "mega")
       if (normalizedKeyword === 'mega') {
+        if (!baseName) return false
         // Only match if there's a hyphen before "mega" (it's a form, not part of the name)
         return formName.includes('-mega') && !baseName.toLowerCase().includes('mega')
       }
@@ -157,7 +158,7 @@ export function usePokemonForms() {
     for (const formResult of matchingForms.slice(0, 50)) {
       // Extract base name from form name: "charizard-mega-x" -> "charizard"
       const baseName = formResult.name.split('-')[0]
-      basePokemonNames.add(baseName)
+      if (baseName) basePokemonNames.add(baseName)
     }
 
     // Now fetch Pokemon IDs for all unique base names in parallel
@@ -248,7 +249,7 @@ export function usePokemonForms() {
               try {
                 // Extract ID from pokemon.url instead of using form.id
                 const pokemonIdMatch = form.pokemon.url.match(/\/pokemon\/(\d+)\/$/)
-                const pokemonId = pokemonIdMatch ? parseInt(pokemonIdMatch[1], 10) : null
+                const pokemonId = pokemonIdMatch?.[1] ? parseInt(pokemonIdMatch[1], 10) : null
 
                 if (pokemonId) {
                   const pokemonData = await $fetch<Pokemon>(`${BASE_URL}/pokemon/${pokemonId}`)

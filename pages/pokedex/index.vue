@@ -20,7 +20,10 @@ const showPokemonModal = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
 const selectedGeneration = ref(1) // Default to Kanto (Gen 1)
 
-// Group Pokemon by generation with dividers
+/**
+ * Group Pokemon by generation with dividers
+ * Performance optimization: useCardVisibility in PokemonCard handles lazy effects
+ */
 const pokemonsByGeneration = computed(() => {
   const pokemons = pokemonStore.filteredPokemons
   const groups: Array<{ type: 'group', generation: typeof GENERATIONS[number], pokemonList: SimplifiedPokemon[] }> = []
@@ -86,7 +89,8 @@ onMounted(async () => {
 
   // Setup infinite scroll observer
   observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && pokemonStore.hasMore && !pokemonStore.loading) {
+    const first = entries[0]
+    if (first?.isIntersecting && pokemonStore.hasMore && !pokemonStore.loading) {
       loadMore()
     }
   }, {

@@ -12,7 +12,7 @@
  * - Mouse tracking with CSS variables
  */
 
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, isRef } from 'vue'
 import type { Ref } from 'vue'
 import type { HolographicConfig } from '~/types'
 
@@ -37,6 +37,9 @@ export function useHolographic(
   },
 ) {
   const { enabled, intensity = 1, type = 'standard' } = config
+
+  // Convert enabled to ref if it's a boolean or Ref
+  const isEnabled = isRef(enabled) ? enabled : ref(enabled ?? true)
 
   // Mouse position (0-1 range)
   const mouseX = ref(0.5)
@@ -174,7 +177,7 @@ export function useHolographic(
    * Handle mouse move (optimized with RAF throttling)
    */
   function handleMouseMove(event: MouseEvent) {
-    if (!enabled || !elementRef.value) return
+    if (!isEnabled.value || !elementRef.value) return
 
     const rect = getRect()
     if (!rect) return
@@ -223,7 +226,7 @@ export function useHolographic(
    * Handle mouse enter
    */
   function handleMouseEnter() {
-    if (!enabled) return
+    if (!isEnabled.value) return
     isActive.value = true
     // Clear cache on hover start for accurate positioning
     cachedRect = null
@@ -233,7 +236,7 @@ export function useHolographic(
    * Handle mouse leave - smooth reset
    */
   function handleMouseLeave() {
-    if (!enabled) return
+    if (!isEnabled.value) return
 
     // Cancel any pending RAF
     if (rafId !== null) {
@@ -258,7 +261,7 @@ export function useHolographic(
    * Setup event listeners
    */
   function setupListeners() {
-    if (!elementRef.value || !enabled) return
+    if (!elementRef.value || !isEnabled.value) return
 
     elementRef.value.addEventListener('mouseenter', handleMouseEnter)
     elementRef.value.addEventListener('mousemove', handleMouseMove)
@@ -276,12 +279,26 @@ export function useHolographic(
     elementRef.value.removeEventListener('mouseleave', handleMouseLeave)
   }
 
+  // Watch enabled state to add/remove listeners
+  watch(isEnabled, (enabled) => {
+    if (enabled) {
+      setupListeners()
+    }
+    else {
+      removeListeners()
+      // Reset to neutral state when disabled
+      handleMouseLeave()
+    }
+  })
+
   // Lifecycle
   onMounted(() => {
     // Use nextTick to ensure element is in DOM
     if (import.meta.client) {
       nextTick(() => {
-        setupListeners()
+        if (isEnabled.value) {
+          setupListeners()
+        }
       })
     }
   })

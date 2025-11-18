@@ -92,21 +92,20 @@ export function getTypeGradient(
   config: GradientConfig = {},
 ): string {
   const { direction = '135deg', stops } = config
+  const [t1, t2] = types
 
-  if (types.length === 0) {
-    return 'linear-gradient(135deg, #dcdcdc, #a0a29f)' // Default to normal type
+  if (!t1) {
+    return 'linear-gradient(135deg, #dcdcdc, #a0a29f)'
   }
 
-  if (types.length === 1) {
-    // Single type: gradient from light to dark
-    const colors = TYPE_COLORS[types[0]]
+  if (!t2) {
+    const colors = TYPE_COLORS[t1]
     const stopStr = stops ? ` ${stops[0]}%, ${colors.dark} ${stops[1]}%` : ''
     return `linear-gradient(${direction}, ${colors.light}${stopStr ? stopStr : `, ${colors.dark}`})`
   }
 
-  // Dual type: gradient from light of type1 to light of type2
-  const color1 = TYPE_COLORS[types[0]].light
-  const color2 = TYPE_COLORS[types[1]].light
+  const color1 = TYPE_COLORS[t1].light
+  const color2 = TYPE_COLORS[t2].light
   const stopStr = stops ? ` ${stops[0]}%, ${color2} ${stops[1]}%` : ''
   return `linear-gradient(${direction}, ${color1}${stopStr ? stopStr : `, ${color2}`})`
 }
@@ -151,14 +150,14 @@ export function getTypeTailwindClass(
  * Converts hex color to RGB values
  */
 export function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result
-    ? {
-        r: Number.parseInt(result[1], 16),
-        g: Number.parseInt(result[2], 16),
-        b: Number.parseInt(result[3], 16),
-      }
-    : null
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!match) return null
+  const [, rHex, gHex, bHex] = match
+  return {
+    r: Number.parseInt(rHex!, 16),
+    g: Number.parseInt(gHex!, 16),
+    b: Number.parseInt(bHex!, 16),
+  }
 }
 
 /**
@@ -175,12 +174,16 @@ export function getLuminance(hex: string): number {
   const rgb = hexToRgb(hex)
   if (!rgb) return 0
 
-  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((val) => {
+  const transform = (val: number): number => {
     const normalized = val / 255
     return normalized <= 0.03928
       ? normalized / 12.92
       : ((normalized + 0.055) / 1.055) ** 2.4
-  })
+  }
+
+  const r = transform(rgb.r)
+  const g = transform(rgb.g)
+  const b = transform(rgb.b)
 
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }

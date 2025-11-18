@@ -35,7 +35,7 @@ const navigationSections = [
     icon: 'ph:sword-bold',
     route: '/moves',
     color: 'from-blue-500 to-cyan-500',
-    available: false,
+    available: true,
   },
   {
     title: 'Abilities',
@@ -43,7 +43,7 @@ const navigationSections = [
     icon: 'ph:lightning-bold',
     route: '/abilities',
     color: 'from-yellow-500 to-orange-500',
-    available: false,
+    available: true,
   },
   {
     title: 'Items',
