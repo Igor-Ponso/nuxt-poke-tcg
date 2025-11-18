@@ -67,6 +67,13 @@ const navLinks = computed(() => [
     active: route.path.startsWith('/pokedex'),
   },
   {
+    path: '/game',
+    label: 'Game',
+    icon: 'ph:game-controller',
+    active: route.path === '/game',
+    highlight: true,
+  },
+  {
     path: '/type-chart',
     label: 'Type Chart',
     icon: 'ph:grid-four',
@@ -174,18 +181,20 @@ function toggleMobileMenu() {
             :key="link.path"
             :to="link.path"
             class="relative px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            :class="
+            :class="[
               link.active
                 ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-            "
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800',
+              link.highlight && 'ring-2 ring-orange-500/50 hover:ring-orange-500 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20'
+            ]"
           >
             <span class="inline-flex items-center gap-2">
               <Icon
                 :icon="link.icon"
                 class="w-4 h-4"
+                :class="link.highlight && 'text-orange-600 dark:text-orange-400'"
               />
-              <span>{{ link.label }}</span>
+              <span :class="link.highlight && 'text-orange-600 dark:text-orange-400 font-bold'">{{ link.label }}</span>
               <span
                 v-if="link.badge"
                 class="px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white"
@@ -302,19 +311,21 @@ function toggleMobileMenu() {
                 :key="link.path"
                 :to="link.path"
                 class="flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all"
-                :class="
+                :class="[
                   link.active
                     ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                "
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800',
+                  link.highlight && 'ring-2 ring-orange-500/50 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20'
+                ]"
                 @click="uiStore.closeMobileMenu()"
               >
                 <span class="flex items-center gap-3">
                   <Icon
                     :icon="link.icon"
                     class="w-5 h-5"
+                    :class="link.highlight && 'text-orange-600 dark:text-orange-400'"
                   />
-                  <span>{{ link.label }}</span>
+                  <span :class="link.highlight && 'text-orange-600 dark:text-orange-400 font-bold'">{{ link.label }}</span>
                 </span>
                 <span
                   v-if="link.badge"
