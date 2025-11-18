@@ -178,6 +178,10 @@ function getPokemonImage(pokemon: SimplifiedPokemon) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`
 }
 
+// Background image URL with baseURL support
+const { app } = useRuntimeConfig()
+const backgroundImageUrl = computed(() => `url('${app.baseURL}images/whos_that_pokemon_bg.webp')`)
+
 // Dev tools hack to show certificate for testing
 onMounted(() => {
   (window as unknown as Record<string, unknown>).showPokemonCertificate = () => {
@@ -300,7 +304,7 @@ const timeColor = computed(() => {
       <!-- Background Image -->
       <div
         class="relative bg-cover bg-center min-h-[600px]"
-        style="background-image: url('/images/whos_that_pokemon_bg.webp');"
+        :style="{ backgroundImage: backgroundImageUrl }"
       >
         <!-- Overlay for better readability -->
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 pointer-events-none" />

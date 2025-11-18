@@ -262,7 +262,8 @@ const spriteUrl = computed(() => {
 /**
  * Pokeball background image URL (SVG watermark to avoid opaque square)
  */
-const pokeballBgUrl = computed(() => '/images/pokeball-white-removebg-preview.png')
+const { app } = useRuntimeConfig()
+const pokeballBgUrl = computed(() => `${app.baseURL}images/pokeball-white-removebg-preview.png`)
 
 /**
  * Dynamic watermark sizing per card size (larger on smaller cards for visibility)

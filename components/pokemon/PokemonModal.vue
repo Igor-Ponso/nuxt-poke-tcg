@@ -28,6 +28,8 @@ const { getAllForms } = usePokemon3D()
 const { getAvailableFormsForPokemon, getEnglishFormName } = usePokemonForms()
 const { fetchPokemon, fetchSpecies, formatHeight, formatWeight } = usePokemonDetails()
 const api = usePokemonApi()
+const { app } = useRuntimeConfig()
+const trainerSpriteUrl = computed(() => `${app.baseURL}images/sprite_red_trainer.png`)
 const { animateCount, easeOutCubic } = useCountingAnimation()
 const show3D = ref(false)
 const showShiny = ref(false)
@@ -886,7 +888,7 @@ onUnmounted(() => {
                                   :style="{ height: `${Math.min(90, (1.7 / Math.max(pokemonHeightInMeters, 1.7)) * 90)}px` }"
                                 >
                                   <img
-                                    src="/images/sprite_red_trainer.png"
+                                    :src="trainerSpriteUrl"
                                     alt="Trainer Red"
                                     class="w-full h-full object-contain brightness-0 dark:brightness-100 opacity-80 pixelated"
                                   >
