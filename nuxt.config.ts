@@ -71,7 +71,7 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
-    typeCheck: true, // ✅ Enabled for production-ready code
+    typeCheck: false, // Disabled in dev to avoid vite-plugin-checker issues, use npm run typecheck
     shim: false,
   },
 

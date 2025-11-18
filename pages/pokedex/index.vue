@@ -3,6 +3,7 @@
  * Pokédex Page
  *
  * Browse and search all Pokémon with filters
+ * WITH VIRTUAL SCROLLING for optimal performance
  */
 
 import type { SimplifiedPokemon } from '~/types'
@@ -21,56 +22,52 @@ const loadMoreTrigger = ref<HTMLElement | null>(null)
 const selectedGeneration = ref(1) // Default to Kanto (Gen 1)
 
 /**
- * Group Pokemon by generation with dividers
- * Performance optimization: useCardVisibility in PokemonCard handles lazy effects
+ * Flatten all pokemons for virtual scrolling
+ * We'll handle generation dividers differently
  */
-const pokemonsByGeneration = computed(() => {
-  const pokemons = pokemonStore.filteredPokemons
-  const groups: Array<{ type: 'group', generation: typeof GENERATIONS[number], pokemonList: SimplifiedPokemon[] }> = []
+const flatPokemons = computed(() => pokemonStore.filteredPokemons)
 
-  let currentGeneration = -1
-  let currentGroup: SimplifiedPokemon[] = []
-
-  pokemons.forEach((pokemon) => {
-    // Determine which generation this Pokemon belongs to
-    const gen = GENERATIONS.find(g => pokemon.id >= g.range.start && pokemon.id <= g.range.end)
-
-    if (gen && gen.id !== currentGeneration) {
-      // Save previous group if it exists
-      if (currentGroup.length > 0 && currentGeneration !== -1) {
-        const prevGen = GENERATIONS.find(g => g.id === currentGeneration)
-        if (prevGen) {
-          groups.push({
-            type: 'group',
-            generation: prevGen,
-            pokemonList: currentGroup,
-          })
-        }
-      }
-
-      // Start new group
-      currentGeneration = gen.id
-      currentGroup = [pokemon]
-    }
-    else {
-      currentGroup.push(pokemon)
-    }
-  })
-
-  // Add last group
-  if (currentGroup.length > 0 && currentGeneration !== -1) {
-    const gen = GENERATIONS.find(g => g.id === currentGeneration)
-    if (gen) {
-      groups.push({
-        type: 'group',
-        generation: gen,
-        pokemonList: currentGroup,
-      })
-    }
-  }
-
-  return groups
+/**
+ * Virtual Grid Setup for Performance
+ * Only renders visible Pokemon cards + buffer
+ * Reduces DOM nodes from 1000+ to ~50-80
+ */
+const {
+  virtualItems,
+  wrapperProps,
+  contentProps,
+} = useVirtualGrid(flatPokemons, {
+  itemHeight: 480, // Estimated card height (includes padding)
+  gap: 24, // gap-6 in Tailwind = 24px
+  overscan: 2, // Render 2 extra rows above/below for smooth scrolling
+  columns: {
+    default: 1, // Mobile
+    sm: 2, // >= 640px
+    lg: 3, // >= 1024px
+    xl: 4, // >= 1280px
+  },
+  debug: false, // Set to true to see virtualization logs
 })
+
+/**
+ * Get generation for a Pokemon (for virtual grid)
+ */
+function getPokemonGeneration(pokemon: SimplifiedPokemon) {
+  return GENERATIONS.find(g => pokemon.id >= g.range.start && pokemon.id <= g.range.end)
+}
+
+/**
+ * Check if we should show generation divider before this Pokemon
+ */
+function shouldShowDivider(pokemon: SimplifiedPokemon, index: number) {
+  if (index === 0) return false
+
+  const currentGen = getPokemonGeneration(pokemon)
+  const prevPokemon = flatPokemons.value[index - 1]
+  const prevGen = prevPokemon ? getPokemonGeneration(prevPokemon) : null
+
+  return currentGen && prevGen && currentGen.id !== prevGen.id
+}
 
 // Infinite scroll observer
 let observer: IntersectionObserver | null = null
@@ -239,46 +236,46 @@ async function handleGenerationChange(genId: number) {
       </div>
     </div>
 
+    <!-- Virtual Scrolling Grid -->
     <div
-      v-else
+      v-else-if="flatPokemons.length > 0"
       class="space-y-6"
     >
-      <!-- Pokemon Grid grouped by generation -->
-      <div class="space-y-8">
-        <div
-          v-for="(group, groupIndex) in pokemonsByGeneration"
-          :key="`gen-${group.generation.id}`"
-          class="space-y-6"
-        >
-          <!-- Generation Divider (skip for first generation if it's the selected one) -->
-          <div
-            v-if="groupIndex > 0 || selectedGeneration !== group.generation.id"
-            class="relative py-4"
-          >
-            <div
-              class="absolute inset-0 flex items-center"
-              aria-hidden="true"
-            >
-              <div class="w-full border-t-2 border-gray-300 dark:border-gray-700" />
-            </div>
-            <div class="relative flex justify-center">
-              <span class="bg-white dark:bg-gray-900 px-6 py-3 text-xl font-bold text-gray-900 dark:text-white rounded-full border-2 border-gray-300 dark:border-gray-700 shadow-lg">
-                {{ group.generation.name }} - {{ group.generation.region }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Pokemon Grid for this generation -->
+      <!-- Virtual Grid Container -->
+      <div v-bind="wrapperProps">
+        <div v-bind="contentProps">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <PokemonCard
-              v-for="pokemon in group.pokemonList"
-              :key="`${pokemon.id}`"
-              :pokemon="pokemon"
-              size="md"
-              :favorited="pokemonStore.isFavorite(pokemon.id)"
-              @click="handlePokemonClick(pokemon)"
-              @favorite="pokemonStore.toggleFavorite(pokemon)"
-            />
+            <template
+              v-for="item in virtualItems"
+              :key="`pokemon-${item.data.id}`"
+            >
+              <!-- Generation Divider (only for first item in new generation) -->
+              <div
+                v-if="shouldShowDivider(item.data, item.index)"
+                class="col-span-full relative py-4"
+              >
+                <div
+                  class="absolute inset-0 flex items-center"
+                  aria-hidden="true"
+                >
+                  <div class="w-full border-t-2 border-gray-300 dark:border-gray-700" />
+                </div>
+                <div class="relative flex justify-center">
+                  <span class="bg-white dark:bg-gray-900 px-6 py-3 text-xl font-bold text-gray-900 dark:text-white rounded-full border-2 border-gray-300 dark:border-gray-700 shadow-lg">
+                    {{ getPokemonGeneration(item.data)?.name }} - {{ getPokemonGeneration(item.data)?.region }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Pokemon Card -->
+              <PokemonCard
+                :pokemon="item.data"
+                size="md"
+                :favorited="pokemonStore.isFavorite(item.data.id)"
+                @click="handlePokemonClick(item.data)"
+                @favorite="pokemonStore.toggleFavorite(item.data)"
+              />
+            </template>
           </div>
         </div>
       </div>
@@ -321,6 +318,14 @@ async function handleGenerationChange(genId: number) {
           No more Pokémon to load
         </p>
       </div>
+
+      <!-- Debug Info (remove in production) -->
+      <!-- <div class="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs font-mono">
+        <div>Total: {{ flatPokemons.length }}</div>
+        <div>Rendered: {{ virtualItems.length }}</div>
+        <div>Columns: {{ currentColumns }}</div>
+        <div>Height: {{ totalHeight }}px</div>
+      </div> -->
     </div>
 
     <!-- Pokemon Detail Modal -->

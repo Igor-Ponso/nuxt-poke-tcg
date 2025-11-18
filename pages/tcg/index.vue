@@ -21,6 +21,28 @@ const currentFilters = ref<{ rarity?: TCGRarity, set?: string }>({})
 const selectedCard = ref<SimplifiedTCGCard | null>(null)
 const showCardModal = ref(false)
 
+/**
+ * Virtual Grid Setup for Performance
+ * Only renders visible TCG cards + buffer
+ */
+const {
+  virtualItems,
+  wrapperProps,
+  contentProps,
+} = useVirtualGrid(computed(() => tcgStore.filteredCards), {
+  itemHeight: 420, // Estimated TCG card height (taller than Pokemon cards)
+  gap: 24, // gap-6 in Tailwind = 24px
+  overscan: 2,
+  columns: {
+    'default': 1, // Mobile
+    'sm': 2, // >= 640px
+    'lg': 3, // >= 1024px
+    'xl': 4, // >= 1280px
+    '2xl': 5, // >= 1536px
+  },
+  debug: false,
+})
+
 async function handleSearch() {
   isSearching.value = true
   await tcgStore.searchCards({
@@ -164,19 +186,26 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- TCG Cards Grid with Virtual Scrolling -->
     <div
       v-else-if="tcgStore.cards.length > 0"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 place-items-center"
+      class="space-y-6"
     >
-      <TCGCard
-        v-for="card in tcgStore.filteredCards"
-        :key="card.id"
-        :card="card"
-        :holographic-enabled="tcgStore.holographicEnabled"
-        card-type="regular-holo"
-        size="md"
-        @click="handleCardClick(card)"
-      />
+      <div v-bind="wrapperProps">
+        <div v-bind="contentProps">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 place-items-center">
+            <TCGCard
+              v-for="item in virtualItems"
+              :key="`tcg-${item.data.id}`"
+              :card="item.data"
+              :holographic-enabled="tcgStore.holographicEnabled"
+              card-type="regular-holo"
+              size="md"
+              @click="handleCardClick(item.data)"
+            />
+          </div>
+        </div>
+      </div>
     </div>
 
     <div

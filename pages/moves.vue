@@ -6,7 +6,7 @@
  */
 
 import { Icon } from '@iconify/vue'
-import type { SimplifiedMove, PokemonType, Move } from '~/types'
+import type { Move, PokemonType, SimplifiedMove } from '~/types'
 
 useHead({
   title: 'Moves - PokéTCG',
@@ -42,10 +42,6 @@ const sortBy = ref<'name' | 'id' | 'power' | 'accuracy' | 'pp' | 'type'>('id')
 // Pagination
 const itemsPerPage = 24
 const currentPage = ref(1)
-
-// Virtual scrolling
-const visibleRange = ref({ start: 0, end: itemsPerPage })
-const bufferSize = 12 // Keep 12 items above and below visible area
 
 // ============================================================================
 // POKEMON TYPES (for filter dropdown)
@@ -112,12 +108,24 @@ const totalMoves = computed(() => filteredMoves.value.length)
 const displayedCount = computed(() => displayedMoves.value.length)
 
 /**
- * Virtually displayed moves (only items in visible range)
+ * Virtual Grid Setup for Performance
+ * Only renders visible move cards + buffer
  */
-const virtuallyDisplayedMoves = computed(() => {
-  const start = Math.max(0, visibleRange.value.start - bufferSize)
-  const end = Math.min(displayedMoves.value.length, visibleRange.value.end + bufferSize)
-  return displayedMoves.value.slice(start, end)
+const {
+  virtualItems,
+  wrapperProps,
+  contentProps,
+} = useVirtualGrid(computed(() => displayedMoves.value), {
+  itemHeight: 380, // Estimated move card height
+  gap: 16, // gap-4 in Tailwind = 16px
+  overscan: 2,
+  columns: {
+    default: 1, // Mobile
+    sm: 2, // >= 640px
+    lg: 3, // >= 1024px
+    xl: 4, // >= 1280px
+  },
+  debug: false,
 })
 
 // ============================================================================
@@ -223,21 +231,6 @@ function handleScroll() {
   const windowHeight = window.innerHeight
   const documentHeight = document.documentElement.scrollHeight
 
-  // Estimate which items are visible based on scroll position
-  // Assuming average card height of ~350px (adjust based on your actual card height)
-  const averageCardHeight = 350
-  const cardsPerRow = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1
-  const rowHeight = averageCardHeight + 16 // card height + gap
-
-  const visibleStart = Math.floor(scrollTop / rowHeight) * cardsPerRow
-  const visibleEnd = Math.ceil((scrollTop + windowHeight) / rowHeight) * cardsPerRow
-
-  // Update visible range
-  visibleRange.value = {
-    start: Math.max(0, visibleStart),
-    end: Math.min(displayedMoves.value.length, visibleEnd),
-  }
-
   // Trigger load more when user is 300px from bottom
   if (!loadingMore.value && hasMore.value) {
     const threshold = 300
@@ -316,7 +309,10 @@ onUnmounted(() => {
 
         <!-- Stats Cards (Mobile: below title, Desktop: right side) -->
         <div class="flex gap-4">
-          <UiCard variant="glass" padding="sm">
+          <UiCard
+            variant="glass"
+            padding="sm"
+          >
             <div class="text-center">
               <div class="text-2xl font-bold text-gray-900 dark:text-white">
                 {{ displayedCount }} / {{ totalMoves }}
@@ -464,18 +460,22 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Moves Grid -->
+    <!-- Moves Grid with Virtual Scrolling -->
     <div
       v-else-if="displayedMoves.length > 0"
       class="space-y-6"
     >
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <MoveCard
-          v-for="move in virtuallyDisplayedMoves"
-          :key="move.id"
-          :move="move"
-          @click="openMoveModal"
-        />
+      <div v-bind="wrapperProps">
+        <div v-bind="contentProps">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <MoveCard
+              v-for="item in virtualItems"
+              :key="`move-${item.data.id}`"
+              :move="item.data"
+              @click="openMoveModal"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Load More Button -->

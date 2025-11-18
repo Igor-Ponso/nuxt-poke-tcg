@@ -32,6 +32,27 @@ const totalAbilities = ref(0)
 const itemsPerPage = 24
 const currentPage = ref(1)
 
+/**
+ * Virtual Grid Setup for Performance
+ * Only renders visible ability cards + buffer
+ */
+const {
+  virtualItems,
+  wrapperProps,
+  contentProps,
+} = useVirtualGrid(computed(() => displayedAbilities.value), {
+  itemHeight: 220, // Estimated ability card height
+  gap: 16, // gap-4 in Tailwind = 16px
+  overscan: 2,
+  columns: {
+    default: 1, // Mobile
+    sm: 2, // >= 640px
+    lg: 3, // >= 1024px
+    xl: 4, // >= 1280px
+  },
+  debug: false,
+})
+
 // Generations for filter
 const generations = [
   { value: 'all', label: 'All Generations' },
@@ -453,14 +474,18 @@ onUnmounted(() => {
       v-else
       class="space-y-6"
     >
-      <!-- Abilities Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <AbilityCard
-          v-for="ability in displayedAbilities"
-          :key="ability.id"
-          :ability="ability"
-          @click="openAbilityModal"
-        />
+      <!-- Abilities Grid with Virtual Scrolling -->
+      <div v-bind="wrapperProps">
+        <div v-bind="contentProps">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <AbilityCard
+              v-for="item in virtualItems"
+              :key="`ability-${item.data.id}`"
+              :ability="item.data"
+              @click="openAbilityModal"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Loading More Indicator (for infinite scroll) -->
