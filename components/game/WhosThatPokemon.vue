@@ -20,11 +20,53 @@ const revealedWords = ref<number>(0)
 // Certificate modal
 const showCertificate = ref(false)
 
+// Pokemon Cry Audio
+const pokemonCryAudio = ref<HTMLAudioElement | null>(null)
+const isPlayingCry = ref(false)
+
+// Quick answer confetti effect
+const showQuickAnswerConfetti = ref(false)
+const wasQuickAnswer = ref(false)
+const QUICK_ANSWER_THRESHOLD = 2 // seconds
+
+// Pokemon details modal
+const showPokemonDetails = ref(false)
+const selectedPokemon = ref<SimplifiedPokemon | null>(null)
+
+/**
+ * Play Pokemon cry sound
+ */
+function playPokemonCry(pokemonId: number) {
+  // Stop any currently playing cry
+  if (pokemonCryAudio.value) {
+    pokemonCryAudio.value.pause()
+    pokemonCryAudio.value.currentTime = 0
+  }
+
+  // Create new audio instance
+  const cryUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${pokemonId}.ogg`
+  const audio = new Audio(cryUrl)
+  audio.volume = 0.5 // Set volume to 50%
+
+  audio.play().catch((error) => {
+    console.warn('Failed to play Pokemon cry:', error)
+  })
+
+  // Track playing state
+  isPlayingCry.value = true
+  audio.onended = () => {
+    isPlayingCry.value = false
+  }
+
+  pokemonCryAudio.value = audio
+}
+
 // Start title animation when game starts
 watch(() => gameStore.currentRound, (newRound) => {
   if (newRound && !newRound.answered) {
     // Reset and animate title
     revealedWords.value = 0
+    wasQuickAnswer.value = false // Reset quick answer badge
     animateTitle()
     // Delay timer start by 1 second to allow image to load
     setTimeout(() => {
@@ -68,8 +110,35 @@ function stopTimer() {
 
 function handleAnswer(pokemon: SimplifiedPokemon) {
   if (gameStore.currentRound?.answered) return
+
+  const isCorrect = pokemon.id === gameStore.currentRound?.pokemon.id
+  const timeElapsed = gameStore.difficultySettings.time - (gameStore.currentRound?.timeLeft || 0)
+  const isQuickAnswer = timeElapsed <= QUICK_ANSWER_THRESHOLD
+
   gameStore.submitAnswer(pokemon)
   stopTimer()
+
+  // Play Pokemon cry if answer is correct
+  if (isCorrect && gameStore.currentRound?.pokemon.id) {
+    // Track if it was a quick answer for badge display
+    wasQuickAnswer.value = isQuickAnswer
+
+    // Trigger confetti for quick answers!
+    if (isQuickAnswer) {
+      showQuickAnswerConfetti.value = true
+      setTimeout(() => {
+        showQuickAnswerConfetti.value = false
+      }, 3500) // Allow full confetti animation to complete
+    }
+
+    // Small delay to let the reveal animation start
+    setTimeout(() => {
+      playPokemonCry(gameStore.currentRound!.pokemon.id)
+    }, 300)
+  }
+  else {
+    wasQuickAnswer.value = false
+  }
 }
 
 function handleNextRound() {
@@ -92,6 +161,18 @@ function handlePlayAgain() {
   gameStore.startGame()
 }
 
+function viewPokemonDetails() {
+  if (gameStore.currentRound?.pokemon) {
+    selectedPokemon.value = gameStore.currentRound.pokemon
+    showPokemonDetails.value = true
+  }
+}
+
+function closePokemonDetails() {
+  showPokemonDetails.value = false
+  selectedPokemon.value = null
+}
+
 // Get pokemon image
 function getPokemonImage(pokemon: SimplifiedPokemon) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`
@@ -107,6 +188,11 @@ onMounted(() => {
 // Cleanup on unmount
 onUnmounted(() => {
   stopTimer()
+  // Clean up audio
+  if (pokemonCryAudio.value) {
+    pokemonCryAudio.value.pause()
+    pokemonCryAudio.value = null
+  }
   // Clean up dev tools command
   delete (window as unknown as Record<string, unknown>).showPokemonCertificate
 })
@@ -131,72 +217,77 @@ const timeColor = computed(() => {
     <!-- Game Header - Stats Bar -->
     <div class="flex items-center justify-between gap-4 flex-wrap">
       <!-- Score -->
-      <UiCard
-        variant="glass"
-        padding="sm"
-        class="flex-1 min-w-[120px]"
-      >
-        <div class="text-center">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Score
+      <div class="flex-1 min-w-[140px] bg-gradient-to-br from-blue-500/10 to-blue-600/10 dark:from-blue-400/20 dark:to-blue-500/20 backdrop-blur-sm border-2 border-blue-500/30 dark:border-blue-400/30 rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+        <div class="text-center space-y-2">
+          <div class="flex items-center justify-center gap-2">
+            <Icon
+              icon="ph:star-fill"
+              class="w-5 h-5 text-blue-600 dark:text-blue-400"
+            />
+            <div class="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+              Score
+            </div>
           </div>
-          <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <div class="text-3xl font-black text-blue-600 dark:text-blue-400 tabular-nums">
             {{ gameStore.stats.score }}
           </div>
         </div>
-      </UiCard>
+      </div>
 
       <!-- Streak -->
-      <UiCard
-        variant="glass"
-        padding="sm"
-        class="flex-1 min-w-[120px]"
-      >
-        <div class="text-center">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Streak
-          </div>
-          <div class="text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center gap-1">
+      <div class="flex-1 min-w-[140px] bg-gradient-to-br from-orange-500/10 to-red-600/10 dark:from-orange-400/20 dark:to-red-500/20 backdrop-blur-sm border-2 border-orange-500/30 dark:border-orange-400/30 rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+        <div class="text-center space-y-2">
+          <div class="flex items-center justify-center gap-2">
             <Icon
               icon="ph:fire-fill"
-              class="w-6 h-6"
+              class="w-5 h-5 text-orange-600 dark:text-orange-400"
+              :class="{ 'animate-pulse': gameStore.stats.streak > 0 }"
             />
+            <div class="text-sm font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wide">
+              Streak
+            </div>
+          </div>
+          <div class="text-3xl font-black text-orange-600 dark:text-orange-400 tabular-nums flex items-center justify-center gap-2">
             {{ gameStore.stats.streak }}
           </div>
         </div>
-      </UiCard>
+      </div>
 
       <!-- Accuracy -->
-      <UiCard
-        variant="glass"
-        padding="sm"
-        class="flex-1 min-w-[120px]"
-      >
-        <div class="text-center">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Accuracy
+      <div class="flex-1 min-w-[140px] bg-gradient-to-br from-green-500/10 to-emerald-600/10 dark:from-green-400/20 dark:to-emerald-500/20 backdrop-blur-sm border-2 border-green-500/30 dark:border-green-400/30 rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+        <div class="text-center space-y-2">
+          <div class="flex items-center justify-center gap-2">
+            <Icon
+              icon="ph:target-fill"
+              class="w-5 h-5 text-green-600 dark:text-green-400"
+            />
+            <div class="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
+              Accuracy
+            </div>
           </div>
-          <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div class="text-3xl font-black text-green-600 dark:text-green-400 tabular-nums">
             {{ gameStore.stats.accuracy.toFixed(0) }}%
           </div>
         </div>
-      </UiCard>
+      </div>
 
       <!-- Best Streak -->
-      <UiCard
-        variant="glass"
-        padding="sm"
-        class="flex-1 min-w-[120px]"
-      >
-        <div class="text-center">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Best Streak
+      <div class="flex-1 min-w-[140px] bg-gradient-to-br from-purple-500/10 to-pink-600/10 dark:from-purple-400/20 dark:to-pink-500/20 backdrop-blur-sm border-2 border-purple-500/30 dark:border-purple-400/30 rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+        <div class="text-center space-y-2">
+          <div class="flex items-center justify-center gap-2">
+            <Icon
+              icon="ph:trophy-fill"
+              class="w-5 h-5 text-purple-600 dark:text-purple-400"
+            />
+            <div class="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+              Best Streak
+            </div>
           </div>
-          <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <div class="text-3xl font-black text-purple-600 dark:text-purple-400 tabular-nums">
             {{ gameStore.stats.bestStreak }}
           </div>
         </div>
-      </UiCard>
+      </div>
     </div>
 
     <!-- Game Area -->
@@ -252,11 +343,11 @@ const timeColor = computed(() => {
                   :key="gameStore.currentRound.pokemon.id"
                   :src="getPokemonImage(gameStore.currentRound.pokemon)"
                   :alt="gameStore.currentRound.revealed ? gameStore.currentRound.pokemon.name : '???'"
-                  class="w-full h-full object-contain drop-shadow-2xl transition-all duration-500"
+                  class="w-full h-full object-contain transition-all duration-500"
                   :class="{
-                    'brightness-0 float-animation': !gameStore.currentRound.revealed,
-                    'scale-110 reveal-animation': gameStore.currentRound.revealed && gameStore.currentRound.correct,
-                    'float-animation': gameStore.currentRound.revealed,
+                    'pokemon-silhouette float-animation': !gameStore.currentRound.revealed,
+                    'drop-shadow-2xl scale-110 reveal-animation': gameStore.currentRound.revealed && gameStore.currentRound.correct,
+                    'drop-shadow-2xl float-animation': gameStore.currentRound.revealed,
                   }"
                 >
               </Transition>
@@ -286,30 +377,45 @@ const timeColor = computed(() => {
                 </div>
                 <div
                   v-else
-                  class="space-y-2 text-center lg:text-left"
+                  class="space-y-3 text-center lg:text-left"
                 >
-                  <h2 class="text-4xl sm:text-5xl font-bold drop-shadow-2xl">
-                    <span
-                      :class="{
-                        'text-green-400': gameStore.currentRound.correct,
-                        'text-red-400': !gameStore.currentRound.correct,
-                      }"
-                      style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"
+                  <!-- Pokemon Name Reveal (larger, two lines) -->
+                  <div class="space-y-1">
+                    <p class="text-3xl sm:text-4xl text-white drop-shadow-lg">
+                      It's
+                    </p>
+                    <p
+                      class="text-5xl sm:text-6xl md:text-7xl font-bold capitalize pokemon-title drop-shadow-2xl"
+                      style="color: #FFCB05; text-shadow: 3px 3px 0 #3B4CCA, -2px -2px 0 #000000;"
                     >
-                      {{ gameStore.currentRound.correct ? 'Correct!' : 'Wrong!' }}
-                    </span>
-                  </h2>
-                  <p class="text-2xl text-white drop-shadow-lg">
-                    It's <span
-                      class="font-bold capitalize pokemon-title"
-                      style="color: #FFCB05; text-shadow: 2px 2px 0 #3B4CCA, -1px -1px 0 #000000;"
-                    >{{ gameStore.currentRound.pokemon.name }}</span>!
-                  </p>
+                      {{ gameStore.currentRound.pokemon.name }}!
+                    </p>
+                  </div>
+
                   <div
                     v-if="gameStore.currentRound.correct"
-                    class="text-xl text-yellow-300 font-semibold drop-shadow-lg"
+                    class="space-y-3"
                   >
-                    +{{ gameStore.roundPoints }} points!
+                    <!-- Quick Answer Lightning Badge -->
+                    <LightningBadge :show="wasQuickAnswer" />
+
+                    <!-- Points -->
+                    <div class="text-xl text-yellow-300 font-semibold drop-shadow-lg">
+                      +{{ gameStore.roundPoints }} points!
+                    </div>
+
+                    <!-- View Details Button -->
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all hover:scale-105 shadow-lg"
+                      @click="viewPokemonDetails"
+                    >
+                      <Icon
+                        icon="ph:info-fill"
+                        class="w-5 h-5"
+                      />
+                      <span class="font-semibold">View Details</span>
+                    </button>
                   </div>
                 </div>
               </Transition>
@@ -353,20 +459,33 @@ const timeColor = computed(() => {
               </span>
             </div>
 
-            <!-- Correct indicator -->
+            <!-- Correct indicator with Cry button -->
             <div
               v-if="gameStore.currentRound.revealed && option.id === gameStore.currentRound.pokemon.id"
-              class="absolute top-2 right-2"
+              class="absolute top-2 right-2 flex items-center gap-2"
             >
               <Icon
                 icon="ph:check-circle-fill"
                 class="w-6 h-6 text-green-600"
               />
+              <!-- Cry replay button -->
+              <button
+                type="button"
+                class="p-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all hover:scale-110 shadow-md"
+                :class="{ 'animate-pulse': isPlayingCry }"
+                :title="'Play ' + option.name + ' cry'"
+                @click.stop="playPokemonCry(option.id)"
+              >
+                <Icon
+                  icon="ph:speaker-high-fill"
+                  class="w-4 h-4"
+                />
+              </button>
             </div>
           </button>
         </div>
 
-        <!-- Next Round Button -->
+        <!-- Next Round / Start New Game Button -->
         <Transition
           enter-active-class="transition duration-500"
           enter-from-class="opacity-0 translate-y-4"
@@ -376,7 +495,9 @@ const timeColor = computed(() => {
             v-if="gameStore.currentRound.answered"
             class="mt-6 flex justify-center"
           >
+            <!-- Show "Next Round" if answer was correct -->
             <UiButton
+              v-if="gameStore.currentRound.correct"
               variant="primary"
               size="lg"
               @click="handleNextRound"
@@ -386,6 +507,20 @@ const timeColor = computed(() => {
                 class="w-5 h-5"
               />
               Next Round
+            </UiButton>
+
+            <!-- Show "Start New Game" if answer was wrong -->
+            <UiButton
+              v-else
+              variant="primary"
+              size="lg"
+              @click="handlePlayAgain"
+            >
+              <Icon
+                icon="ph:play-fill"
+                class="w-5 h-5"
+              />
+              Start New Game
             </UiButton>
           </div>
         </Transition>
@@ -419,6 +554,16 @@ const timeColor = computed(() => {
       @close="handleCertificateClose"
       @play-again="handlePlayAgain"
     />
+
+    <!-- Quick Answer Confetti Effect -->
+    <ConfettiEffect :show="showQuickAnswerConfetti" />
+
+    <!-- Pokemon Details Modal -->
+    <PokemonModal
+      :pokemon="selectedPokemon"
+      :show="showPokemonDetails"
+      @close="closePokemonDetails"
+    />
   </div>
 </template>
 
@@ -435,6 +580,11 @@ const timeColor = computed(() => {
 .pokemon-title {
   font-family: 'Pokemon Solid', sans-serif !important;
   letter-spacing: 2px;
+}
+
+/* Pokemon silhouette style - official anime style */
+.pokemon-silhouette {
+  filter: brightness(0) saturate(100%) invert(20%) sepia(15%) saturate(1500%) hue-rotate(180deg) drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.6)) drop-shadow(8px 8px 2px rgba(0, 0, 0, 0.4));
 }
 
 /* Float animation for Pokemon silhouette */

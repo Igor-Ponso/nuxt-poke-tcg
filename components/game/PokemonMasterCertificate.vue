@@ -346,31 +346,29 @@ const certificateMessage = computed(() => {
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                  <UiButton
-                    variant="primary"
-                    size="lg"
-                    class="flex-1"
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                  <button
+                    type="button"
+                    class="flex-1 inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-500 via-green-600 to-green-500 hover:from-green-600 hover:via-green-700 hover:to-green-600 text-white font-bold text-lg rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 shadow-lg group"
                     @click="emit('playAgain')"
                   >
                     <Icon
                       icon="ph:play-fill"
-                      class="w-5 h-5"
+                      class="w-6 h-6 group-hover:scale-110 transition-transform"
                     />
-                    Play Again
-                  </UiButton>
-                  <UiButton
-                    variant="secondary"
-                    size="lg"
-                    class="flex-1"
+                    <span>Play Again</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 hover:from-blue-600 hover:via-blue-700 hover:to-blue-600 text-white font-bold text-lg rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 shadow-lg group"
                     @click="emit('close')"
                   >
                     <Icon
                       icon="ph:house-fill"
-                      class="w-5 h-5"
+                      class="w-6 h-6 group-hover:scale-110 transition-transform"
                     />
-                    Main Menu
-                  </UiButton>
+                    <span>Main Menu</span>
+                  </button>
                 </div>
 
                 <!-- Footer -->

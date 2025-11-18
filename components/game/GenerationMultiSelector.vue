@@ -148,29 +148,29 @@ function toggleExpanded() {
     <!-- Content (Collapsible) -->
     <div v-if="isExpanded">
       <!-- Action Buttons -->
-      <div class="flex gap-2 mb-4">
-        <UiButton
-          variant="secondary"
-          size="sm"
+      <div class="flex gap-3 mb-6">
+        <button
+          type="button"
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shadow-md group"
           @click="selectAll"
         >
           <Icon
-            icon="ph:check-square"
-            class="w-4 h-4"
+            icon="ph:check-square-fill"
+            class="w-5 h-5 group-hover:scale-110 transition-transform"
           />
-          Select All
-        </UiButton>
-        <UiButton
-          variant="secondary"
-          size="sm"
+          <span>Select All</span>
+        </button>
+        <button
+          type="button"
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shadow-md group"
           @click="clearAll"
         >
           <Icon
-            icon="ph:x-square"
-            class="w-4 h-4"
+            icon="ph:x-square-fill"
+            class="w-5 h-5 group-hover:scale-110 transition-transform"
           />
-          Clear All
-        </UiButton>
+          <span>Clear All</span>
+        </button>
       </div>
 
       <!-- Generation Grid - 3x3 layout -->
@@ -180,55 +180,55 @@ function toggleExpanded() {
           v-for="gen in generations"
           :key="gen.id"
           type="button"
-          class="group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:scale-105"
+          class="group relative overflow-hidden rounded-xl border-3 transition-all duration-300 hover:scale-105 bg-white dark:bg-gray-800"
           :class="isSelected(gen.id)
-            ? 'border-blue-500 shadow-lg shadow-blue-500/30 ring-2 ring-blue-500/20'
-            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg'"
+            ? 'border-blue-600 shadow-xl shadow-blue-500/40 ring-4 ring-blue-500/30'
+            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-xl'"
           @click="toggleGeneration(gen.id)"
         >
           <!-- Gradient Background -->
           <div
             class="absolute inset-0 bg-gradient-to-br transition-opacity duration-300"
-            :class="[gen.color, isSelected(gen.id) ? 'opacity-20' : 'opacity-10 group-hover:opacity-15']"
+            :class="[gen.color, isSelected(gen.id) ? 'opacity-25' : 'opacity-15 group-hover:opacity-20']"
           />
 
           <!-- Content -->
-          <div class="relative p-3 flex items-center gap-3">
+          <div class="relative p-4 flex items-center gap-3">
             <!-- Checkbox Indicator -->
             <div
-              class="flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all duration-200"
+              class="flex-shrink-0 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all duration-200 shadow-sm"
               :class="isSelected(gen.id)
-                ? 'bg-blue-500 border-blue-500'
-                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600'"
+                ? 'bg-blue-600 border-blue-600 scale-110'
+                : 'bg-white dark:bg-gray-700 border-gray-400 dark:border-gray-500'"
             >
               <Icon
                 v-if="isSelected(gen.id)"
                 icon="ph:check-bold"
-                class="w-4 h-4 text-white"
+                class="w-5 h-5 text-white"
               />
             </div>
 
             <!-- Starters -->
-            <div class="flex items-center justify-center gap-1">
+            <div class="flex items-center justify-center gap-0.5">
               <img
-                v-for="starterId in gen.starters.slice(0, 2)"
+                v-for="starterId in gen.starters"
                 :key="starterId"
                 :src="getStarterImageUrl(starterId)"
                 :alt="`Starter ${starterId}`"
-                class="w-8 h-8 object-contain drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
+                class="w-9 h-9 object-contain drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
                 loading="lazy"
               >
             </div>
 
             <!-- Text -->
             <div class="flex-1 text-left">
-              <div class="text-xs font-semibold text-gray-600 dark:text-gray-400">
+              <div class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Gen {{ gen.id }}
               </div>
-              <div class="text-sm font-bold text-gray-900 dark:text-white">
+              <div class="text-base font-black text-gray-900 dark:text-white">
                 {{ gen.region }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-500">
+              <div class="text-xs font-semibold text-gray-600 dark:text-gray-400">
                 {{ gen.pokemonCount }} Pokémon
               </div>
             </div>
@@ -236,7 +236,7 @@ function toggleExpanded() {
 
           <!-- Glow effect on hover -->
           <div
-            class="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-15 transition-opacity duration-300 pointer-events-none"
+            class="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"
             :class="gen.color"
           />
         </button>

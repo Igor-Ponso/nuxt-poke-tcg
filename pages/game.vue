@@ -162,48 +162,47 @@ const difficultyOptions = [
       </UiCard>
 
       <!-- How to Play -->
-      <UiCard
-        variant="glass"
-        padding="lg"
-      >
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Icon
-            icon="ph:info-fill"
-            class="w-6 h-6 text-blue-600"
-          />
-          How to Play
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-6 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
+        <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-5 flex items-center gap-3">
+          <div class="p-2 bg-blue-600 rounded-lg">
+            <Icon
+              icon="ph:info-fill"
+              class="w-6 h-6 text-white"
+            />
+          </div>
+          <span>How to Play</span>
         </h3>
-        <ul class="space-y-3 text-gray-700 dark:text-gray-300">
-          <li class="flex items-start gap-2">
+        <ul class="space-y-4">
+          <li class="flex items-start gap-3 p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg backdrop-blur-sm">
             <Icon
               icon="ph:number-circle-one-fill"
-              class="w-6 h-6 text-blue-600 flex-shrink-0"
+              class="w-7 h-7 text-blue-600 dark:text-blue-400 flex-shrink-0"
             />
-            <span>A Pokémon silhouette will appear on screen</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">A Pokémon silhouette will appear on screen</span>
           </li>
-          <li class="flex items-start gap-2">
+          <li class="flex items-start gap-3 p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg backdrop-blur-sm">
             <Icon
               icon="ph:number-circle-two-fill"
-              class="w-6 h-6 text-blue-600 flex-shrink-0"
+              class="w-7 h-7 text-blue-600 dark:text-blue-400 flex-shrink-0"
             />
-            <span>Choose the correct Pokémon name from the options before time runs out</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">Choose the correct Pokémon name from the options before time runs out</span>
           </li>
-          <li class="flex items-start gap-2">
+          <li class="flex items-start gap-3 p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg backdrop-blur-sm">
             <Icon
               icon="ph:number-circle-three-fill"
-              class="w-6 h-6 text-blue-600 flex-shrink-0"
+              class="w-7 h-7 text-blue-600 dark:text-blue-400 flex-shrink-0"
             />
-            <span>Build up your streak for bonus points!</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">Build up your streak for bonus points!</span>
           </li>
-          <li class="flex items-start gap-2">
+          <li class="flex items-start gap-3 p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg backdrop-blur-sm">
             <Icon
               icon="ph:number-circle-four-fill"
-              class="w-6 h-6 text-blue-600 flex-shrink-0"
+              class="w-7 h-7 text-blue-600 dark:text-blue-400 flex-shrink-0"
             />
-            <span>Higher difficulties have more options and less time</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">Higher difficulties have more options and less time</span>
           </li>
         </ul>
-      </UiCard>
+      </div>
 
       <!-- Start Button -->
       <div class="flex justify-center">
