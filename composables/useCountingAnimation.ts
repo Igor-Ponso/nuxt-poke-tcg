@@ -13,7 +13,7 @@ export function useCountingAnimation() {
     to: number,
     duration: number,
     onUpdate: (value: number) => void,
-    easing: (t: number) => number = (t) => t, // Linear by default
+    easing: (t: number) => number = t => t, // Linear by default
   ) {
     const startTime = performance.now()
 

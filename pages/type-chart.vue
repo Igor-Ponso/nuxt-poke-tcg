@@ -192,7 +192,10 @@ const matchupDetails = computed(() => {
       <div class="overflow-x-auto">
         <div class="inline-block min-w-full">
           <!-- Table -->
-          <div class="grid" style="grid-template-columns: auto repeat(18, minmax(40px, 1fr));">
+          <div
+            class="grid"
+            style="grid-template-columns: auto repeat(18, minmax(40px, 1fr));"
+          >
             <!-- Header Row: Defender Types -->
             <div class="sticky left-0 z-20 bg-white dark:bg-gray-900 p-2" />
             <div
@@ -280,7 +283,10 @@ const matchupDetails = computed(() => {
           class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           @click="clearSelection"
         >
-          <Icon icon="ph:x-bold" class="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <Icon
+            icon="ph:x-bold"
+            class="w-5 h-5 text-gray-600 dark:text-gray-400"
+          />
         </button>
 
         <div class="space-y-4">
@@ -324,22 +330,34 @@ const matchupDetails = computed(() => {
           <!-- Description -->
           <div class="text-center text-gray-600 dark:text-gray-400">
             <template v-if="matchupDetails.effectiveness === 2">
-              <Icon icon="ph:arrow-up-bold" class="inline w-5 h-5 text-green-500" />
+              <Icon
+                icon="ph:arrow-up-bold"
+                class="inline w-5 h-5 text-green-500"
+              />
               <span class="capitalize">{{ matchupDetails.attacker }}</span> type moves deal double damage to
               <span class="capitalize">{{ matchupDetails.defender }}</span> type Pokemon
             </template>
             <template v-else-if="matchupDetails.effectiveness === 0.5">
-              <Icon icon="ph:arrow-down-bold" class="inline w-5 h-5 text-red-500" />
+              <Icon
+                icon="ph:arrow-down-bold"
+                class="inline w-5 h-5 text-red-500"
+              />
               <span class="capitalize">{{ matchupDetails.attacker }}</span> type moves deal half damage to
               <span class="capitalize">{{ matchupDetails.defender }}</span> type Pokemon
             </template>
             <template v-else-if="matchupDetails.effectiveness === 0">
-              <Icon icon="ph:x-circle-bold" class="inline w-5 h-5 text-gray-500" />
+              <Icon
+                icon="ph:x-circle-bold"
+                class="inline w-5 h-5 text-gray-500"
+              />
               <span class="capitalize">{{ matchupDetails.attacker }}</span> type moves have no effect on
               <span class="capitalize">{{ matchupDetails.defender }}</span> type Pokemon
             </template>
             <template v-else>
-              <Icon icon="ph:minus-bold" class="inline w-5 h-5 text-gray-500" />
+              <Icon
+                icon="ph:minus-bold"
+                class="inline w-5 h-5 text-gray-500"
+              />
               <span class="capitalize">{{ matchupDetails.attacker }}</span> type moves deal normal damage to
               <span class="capitalize">{{ matchupDetails.defender }}</span> type Pokemon
             </template>
@@ -354,24 +372,39 @@ const matchupDetails = computed(() => {
       padding="lg"
     >
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-        <Icon icon="ph:info-fill" class="w-6 h-6 text-blue-500" />
+        <Icon
+          icon="ph:info-fill"
+          class="w-6 h-6 text-blue-500"
+        />
         How to Use This Chart
       </h3>
       <div class="space-y-2 text-gray-600 dark:text-gray-400">
         <p class="flex items-start gap-2">
-          <Icon icon="ph:arrow-right-bold" class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500" />
+          <Icon
+            icon="ph:arrow-right-bold"
+            class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500"
+          />
           <span><strong>Rows</strong> represent the attacking type (the move type being used)</span>
         </p>
         <p class="flex items-start gap-2">
-          <Icon icon="ph:arrow-down-bold" class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500" />
+          <Icon
+            icon="ph:arrow-down-bold"
+            class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500"
+          />
           <span><strong>Columns</strong> represent the defending type (the target Pokemon's type)</span>
         </p>
         <p class="flex items-start gap-2">
-          <Icon icon="ph:cursor-click-fill" class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500" />
+          <Icon
+            icon="ph:cursor-click-fill"
+            class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500"
+          />
           <span><strong>Click</strong> any cell to see detailed matchup information</span>
         </p>
         <p class="flex items-start gap-2">
-          <Icon icon="ph:mouse-fill" class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500" />
+          <Icon
+            icon="ph:mouse-fill"
+            class="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-500"
+          />
           <span><strong>Hover</strong> over cells to highlight the row and column</span>
         </p>
       </div>

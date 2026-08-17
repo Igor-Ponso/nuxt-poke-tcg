@@ -5,8 +5,8 @@
  * Display move information in a card format
  */
 
-import { Icon } from '@iconify/vue';
-import type { SimplifiedMove } from '~/types';
+import { Icon } from '@iconify/vue'
+import type { SimplifiedMove } from '~/types'
 
 interface Props {
   move: SimplifiedMove

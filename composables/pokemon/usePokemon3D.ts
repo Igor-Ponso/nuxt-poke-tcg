@@ -5,21 +5,21 @@
  * Models are in GLB format, optimized for web viewing
  */
 
-export type Pokemon3DFormName =
-  | 'regular'
-  | 'shiny'
-  | 'mega'
-  | 'megaShiny'
-  | 'xy' // Mega X/Y
-  | 'sxy' // Shiny Mega X/Y
-  | 'gmax' // Gigantamax
-  | 'gmaxShiny' // Shiny Gigantamax
-  | 'alolan'
-  | 'galarian'
-  | 'hisuian'
-  | 'paldean'
-  | 'primal'
-  | 'origin'
+export type Pokemon3DFormName
+  = | 'regular'
+    | 'shiny'
+    | 'mega'
+    | 'megaShiny'
+    | 'xy' // Mega X/Y
+    | 'sxy' // Shiny Mega X/Y
+    | 'gmax' // Gigantamax
+    | 'gmaxShiny' // Shiny Gigantamax
+    | 'alolan'
+    | 'galarian'
+    | 'hisuian'
+    | 'paldean'
+    | 'primal'
+    | 'origin'
 
 export interface Pokemon3DModel {
   name: string
@@ -40,10 +40,11 @@ let pokemon3DAllPromise: Promise<Pokemon3DResponse> | null = null
 let pokemon3DAllData: Pokemon3DResponse | null = null
 let pokemon3DRateLimitUntil = 0 // timestamp (ms) until we should retry network fetch
 
-function isRateLimitError(error: any): boolean {
+function isRateLimitError(error: unknown): boolean {
   if (!error) return false
   // $fetch errors may contain status / response.status or message with 429
-  return error.status === 429 || error?.response?.status === 429 || /429/.test(String(error.message))
+  const err = error as { status?: number, response?: { status?: number }, message?: unknown }
+  return err.status === 429 || err.response?.status === 429 || /429/.test(String(err.message))
 }
 
 function sleep(ms: number) {

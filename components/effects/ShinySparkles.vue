@@ -7,7 +7,7 @@
  * 2. Idle state: Stars twinkle and float around the Pokemon
  */
 
-import { Icon } from '@iconify/vue';
+import { Icon } from '@iconify/vue'
 
 interface Props {
   active?: boolean

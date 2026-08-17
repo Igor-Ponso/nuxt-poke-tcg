@@ -89,12 +89,12 @@ export function useEvolutionChain() {
         || ''
     }
     catch (error) {
-      console.warn(`Could not fetch sprite for ${link.species.name}`)
+      console.warn(`Could not fetch sprite for ${link.species.name}`, error)
     }
 
     // Process evolution details
     const evolutionDetails = link.evolution_details.map(detail =>
-      processEvolutionDetail(detail)
+      processEvolutionDetail(detail),
     )
 
     // Add current Pokemon

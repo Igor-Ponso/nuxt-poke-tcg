@@ -69,7 +69,7 @@ const evolutionTree = computed(() => {
   let currentLevel = [base]
   while (currentLevel.length > 0) {
     const nextLevel = evolutions.value.filter(e =>
-      currentLevel.some(parent => parent.species.name === e.evolvesFrom)
+      currentLevel.some(parent => parent.species.name === e.evolvesFrom),
     )
 
     if (nextLevel.length > 0) {

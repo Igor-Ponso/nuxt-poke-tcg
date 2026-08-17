@@ -169,7 +169,10 @@ onUnmounted(() => {
               class="absolute top-4 right-4 z-10 p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               @click="handleClose"
             >
-              <Icon icon="ph:x-bold" class="w-6 h-6 text-gray-600 dark:text-gray-400" />
+              <Icon
+                icon="ph:x-bold"
+                class="w-6 h-6 text-gray-600 dark:text-gray-400"
+              />
             </button>
 
             <!-- Header -->
@@ -186,13 +189,19 @@ onUnmounted(() => {
 
                 <!-- Type and Category -->
                 <div class="flex flex-col gap-2">
-                  <PokemonTypeTag :type="move.type.name as PokemonType" size="md" />
+                  <PokemonTypeTag
+                    :type="move.type.name as PokemonType"
+                    size="md"
+                  />
                   <div
                     v-if="categoryConfig"
                     class="flex items-center gap-2 px-3 py-2 rounded-lg text-white font-bold"
                     :class="categoryConfig.bgColor"
                   >
-                    <Icon :icon="categoryConfig.icon" class="w-4 h-4" />
+                    <Icon
+                      :icon="categoryConfig.icon"
+                      class="w-4 h-4"
+                    />
                     <span>{{ categoryConfig.label }}</span>
                   </div>
                 </div>
@@ -204,7 +213,10 @@ onUnmounted(() => {
               <!-- Stats Grid -->
               <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <!-- Power -->
-                <UiCard variant="glass" padding="md">
+                <UiCard
+                  variant="glass"
+                  padding="md"
+                >
                   <div class="text-center">
                     <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">
                       Power
@@ -216,7 +228,10 @@ onUnmounted(() => {
                 </UiCard>
 
                 <!-- Accuracy -->
-                <UiCard variant="glass" padding="md">
+                <UiCard
+                  variant="glass"
+                  padding="md"
+                >
                   <div class="text-center">
                     <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">
                       Accuracy
@@ -228,7 +243,10 @@ onUnmounted(() => {
                 </UiCard>
 
                 <!-- PP -->
-                <UiCard variant="glass" padding="md">
+                <UiCard
+                  variant="glass"
+                  padding="md"
+                >
                   <div class="text-center">
                     <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">
                       PP
@@ -240,7 +258,10 @@ onUnmounted(() => {
                 </UiCard>
 
                 <!-- Priority -->
-                <UiCard variant="glass" padding="md">
+                <UiCard
+                  variant="glass"
+                  padding="md"
+                >
                   <div class="text-center">
                     <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">
                       Priority
@@ -256,7 +277,10 @@ onUnmounted(() => {
               <UiCard variant="glass">
                 <div class="space-y-2">
                   <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Icon icon="ph:info-bold" class="w-5 h-5" />
+                    <Icon
+                      icon="ph:info-bold"
+                      class="w-5 h-5"
+                    />
                     Effect
                   </h3>
                   <p class="text-gray-700 dark:text-gray-300">
@@ -269,7 +293,10 @@ onUnmounted(() => {
               <UiCard variant="glass">
                 <div class="space-y-2">
                   <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Icon icon="ph:book-open-bold" class="w-5 h-5" />
+                    <Icon
+                      icon="ph:book-open-bold"
+                      class="w-5 h-5"
+                    />
                     Description
                   </h3>
                   <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -279,10 +306,16 @@ onUnmounted(() => {
               </UiCard>
 
               <!-- Flavor Text -->
-              <UiCard v-if="flavorText" variant="glass">
+              <UiCard
+                v-if="flavorText"
+                variant="glass"
+              >
                 <div class="space-y-2">
                   <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Icon icon="ph:game-controller-bold" class="w-5 h-5" />
+                    <Icon
+                      icon="ph:game-controller-bold"
+                      class="w-5 h-5"
+                    />
                     In-Game Description
                   </h3>
                   <p class="text-gray-700 dark:text-gray-300 text-sm italic">
@@ -294,9 +327,15 @@ onUnmounted(() => {
               <!-- Additional Details -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Target -->
-                <UiCard variant="glass" padding="sm">
+                <UiCard
+                  variant="glass"
+                  padding="sm"
+                >
                   <div class="flex items-center gap-2">
-                    <Icon icon="ph:crosshair-bold" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <Icon
+                      icon="ph:crosshair-bold"
+                      class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                    />
                     <div>
                       <div class="text-xs text-gray-500 dark:text-gray-400">
                         Target
@@ -309,9 +348,16 @@ onUnmounted(() => {
                 </UiCard>
 
                 <!-- Effect Chance -->
-                <UiCard v-if="move.effect_chance" variant="glass" padding="sm">
+                <UiCard
+                  v-if="move.effect_chance"
+                  variant="glass"
+                  padding="sm"
+                >
                   <div class="flex items-center gap-2">
-                    <Icon icon="ph:percent-bold" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <Icon
+                      icon="ph:percent-bold"
+                      class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                    />
                     <div>
                       <div class="text-xs text-gray-500 dark:text-gray-400">
                         Effect Chance
@@ -328,7 +374,10 @@ onUnmounted(() => {
               <UiCard variant="glass">
                 <div class="space-y-3">
                   <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Icon icon="ph:pokemon-logo-fill" class="w-5 h-5" />
+                    <Icon
+                      icon="ph:pokemon-logo-fill"
+                      class="w-5 h-5"
+                    />
                     Learned By {{ move.learned_by_pokemon.length }} Pokémon
                   </h3>
                   <div class="text-sm text-gray-600 dark:text-gray-400">

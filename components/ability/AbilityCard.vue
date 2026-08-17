@@ -5,8 +5,8 @@
  * Display ability information in a card format
  */
 
-import { Icon } from '@iconify/vue';
-import type { SimplifiedAbility } from '~/types';
+import { Icon } from '@iconify/vue'
+import type { SimplifiedAbility } from '~/types'
 
 interface Props {
   ability: SimplifiedAbility

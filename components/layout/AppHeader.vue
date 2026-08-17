@@ -185,7 +185,7 @@ function toggleMobileMenu() {
               link.active
                 ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800',
-              link.highlight && 'ring-2 ring-orange-500/50 hover:ring-orange-500 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20'
+              link.highlight && 'ring-2 ring-orange-500/50 hover:ring-orange-500 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20',
             ]"
           >
             <span class="inline-flex items-center gap-2">
@@ -315,7 +315,7 @@ function toggleMobileMenu() {
                   link.active
                     ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800',
-                  link.highlight && 'ring-2 ring-orange-500/50 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20'
+                  link.highlight && 'ring-2 ring-orange-500/50 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20',
                 ]"
                 @click="uiStore.closeMobileMenu()"
               >

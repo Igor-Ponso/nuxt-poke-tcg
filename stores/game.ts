@@ -103,7 +103,7 @@ export const useGameStore = defineStore('game', {
     caughtEmAll(): boolean {
       // Check if all generations are fully loaded and all Pokemon used
       let allGenerationsComplete = true
-      for (const [genId, progress] of this.generationProgress) {
+      for (const progress of this.generationProgress.values()) {
         if (progress.loaded < progress.total) {
           allGenerationsComplete = false
           break
@@ -269,7 +269,7 @@ export const useGameStore = defineStore('game', {
       if (currentUnusedPool.length === 0) {
         // Check if all generations are fully loaded
         let allGenerationsComplete = true
-        for (const [genId, progress] of this.generationProgress) {
+        for (const progress of this.generationProgress.values()) {
           if (progress.loaded < progress.total) {
             allGenerationsComplete = false
             break
@@ -336,8 +336,6 @@ export const useGameStore = defineStore('game', {
      * Check if we need to load more Pokemon and load them
      */
     async checkAndLoadMore() {
-      const { GENERATIONS } = await import('~/utils/constants')
-
       // Find generations that have more Pokemon to load
       for (const genId of this.selectedGenerations) {
         const progress = this.generationProgress.get(genId)
@@ -369,7 +367,8 @@ export const useGameStore = defineStore('game', {
         if (this.stats.streak > this.stats.bestStreak) {
           this.stats.bestStreak = this.stats.streak
         }
-      } else {
+      }
+      else {
         // Wrong answer
         this.stats.totalWrong++
         this.stats.streak = 0

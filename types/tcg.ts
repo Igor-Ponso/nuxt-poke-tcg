@@ -199,47 +199,47 @@ export type TCGSetsResponse = TCGResponse<TCGSet[]>
 // TCG RARITIES (for filtering/display)
 // ============================================================================
 
-export type TCGRarity =
-  | 'Common'
-  | 'Uncommon'
-  | 'Rare'
-  | 'Rare Holo'
-  | 'Rare Holo EX'
-  | 'Rare Holo GX'
-  | 'Rare Holo V'
-  | 'Rare Holo VMAX'
-  | 'Rare Holo VSTAR'
-  | 'Rare Ultra'
-  | 'Rare Secret'
-  | 'Rare Rainbow'
-  | 'Rare Shiny'
-  | 'Rare Shiny GX'
-  | 'Amazing Rare'
-  | 'Promo'
-  | 'Radiant Rare'
-  | 'Illustration Rare'
-  | 'Special Illustration Rare'
-  | 'Hyper Rare'
-  | 'Ultra Rare'
-  | 'Double Rare'
-  | 'ACE SPEC Rare'
+export type TCGRarity
+  = | 'Common'
+    | 'Uncommon'
+    | 'Rare'
+    | 'Rare Holo'
+    | 'Rare Holo EX'
+    | 'Rare Holo GX'
+    | 'Rare Holo V'
+    | 'Rare Holo VMAX'
+    | 'Rare Holo VSTAR'
+    | 'Rare Ultra'
+    | 'Rare Secret'
+    | 'Rare Rainbow'
+    | 'Rare Shiny'
+    | 'Rare Shiny GX'
+    | 'Amazing Rare'
+    | 'Promo'
+    | 'Radiant Rare'
+    | 'Illustration Rare'
+    | 'Special Illustration Rare'
+    | 'Hyper Rare'
+    | 'Ultra Rare'
+    | 'Double Rare'
+    | 'ACE SPEC Rare'
 
 // ============================================================================
 // TCG TYPES (for energy/cards)
 // ============================================================================
 
-export type TCGType =
-  | 'Colorless'
-  | 'Darkness'
-  | 'Dragon'
-  | 'Fairy'
-  | 'Fighting'
-  | 'Fire'
-  | 'Grass'
-  | 'Lightning'
-  | 'Metal'
-  | 'Psychic'
-  | 'Water'
+export type TCGType
+  = | 'Colorless'
+    | 'Darkness'
+    | 'Dragon'
+    | 'Fairy'
+    | 'Fighting'
+    | 'Fire'
+    | 'Grass'
+    | 'Lightning'
+    | 'Metal'
+    | 'Psychic'
+    | 'Water'
 
 // ============================================================================
 // QUERY PARAMETERS

@@ -1,5 +1,8 @@
 /**
  * Type definitions for vue-virtual-scroller
+ *
+ * Only the shims the plugin needs — the library's prop interfaces were declared
+ * here but never imported anywhere, so they are gone.
  */
 
 declare module 'vue-virtual-scroller' {
@@ -8,32 +11,9 @@ declare module 'vue-virtual-scroller' {
   const VueVirtualScroller: Plugin
 
   export default VueVirtualScroller
-
-  export interface RecycleScrollerProps {
-    items: any[]
-    itemSize?: number
-    minItemSize?: number | string
-    direction?: 'vertical' | 'horizontal'
-    keyField?: string
-    buffer?: number
-    pageMode?: boolean
-    prerender?: number
-    emitUpdate?: boolean
-  }
-
-  export interface DynamicScrollerProps {
-    items: any[]
-    minItemSize: number | string
-    direction?: 'vertical' | 'horizontal'
-    keyField?: string
-    buffer?: number
-    pageMode?: boolean
-    prerender?: number
-    emitUpdate?: boolean
-  }
 }
 
 declare module 'vue-virtual-scroller/dist/vue-virtual-scroller.css' {
-  const content: any
+  const content: string
   export default content
 }

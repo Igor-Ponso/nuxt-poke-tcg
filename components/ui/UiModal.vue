@@ -7,7 +7,7 @@
  */
 
 export interface UiModalProps {
-  modelValue: boolean
+  modelValue?: boolean
   title?: string
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
   persistent?: boolean

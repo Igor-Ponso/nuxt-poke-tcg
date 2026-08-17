@@ -818,7 +818,10 @@ onUnmounted(() => {
                   >
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <!-- Physical Info -->
-                      <div ref="physicalInfoSection" class="space-y-4">
+                      <div
+                        ref="physicalInfoSection"
+                        class="space-y-4"
+                      >
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                           Physical Info
                         </h3>

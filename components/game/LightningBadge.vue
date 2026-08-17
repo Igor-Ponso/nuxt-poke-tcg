@@ -29,7 +29,8 @@ const electricBolts = ref<ElectricBolt[]>([])
 watch(() => props.show, (isShowing) => {
   if (isShowing) {
     generateElectricBolts()
-  } else {
+  }
+  else {
     electricBolts.value = []
   }
 })
@@ -123,10 +124,22 @@ onMounted(() => {
         </svg>
 
         <!-- Corner lightning sparks -->
-        <div class="absolute -top-2 -left-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark" style="animation-delay: 0s;" />
-        <div class="absolute -top-2 -right-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark" style="animation-delay: 0.2s;" />
-        <div class="absolute -bottom-2 -left-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark" style="animation-delay: 0.4s;" />
-        <div class="absolute -bottom-2 -right-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark" style="animation-delay: 0.6s;" />
+        <div
+          class="absolute -top-2 -left-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark"
+          style="animation-delay: 0s;"
+        />
+        <div
+          class="absolute -top-2 -right-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark"
+          style="animation-delay: 0.2s;"
+        />
+        <div
+          class="absolute -bottom-2 -left-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark"
+          style="animation-delay: 0.4s;"
+        />
+        <div
+          class="absolute -bottom-2 -right-2 w-3 h-3 bg-yellow-300 rounded-full animate-spark"
+          style="animation-delay: 0.6s;"
+        />
       </div>
 
       <!-- Content (on top of effects) -->
