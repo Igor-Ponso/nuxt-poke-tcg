@@ -226,18 +226,18 @@ function toggleExpanded() {
           <!-- Content - 50/50 Split -->
           <div class="relative flex items-stretch h-full">
             <!-- Left Half - Pikachu Sprite -->
-            <div class="w-1/2 flex items-center justify-center p-2 sm:p-3 overflow-hidden">
+            <div class="w-1/2 flex items-center justify-center p-1.5 sm:p-2 md:p-3 overflow-hidden">
               <img
                 :src="getPikachuSpriteUrl(version.id)"
                 :alt="`Pikachu in ${version.name}`"
-                class="w-full h-full max-h-24 object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-125 pixelated"
+                class="w-full h-full max-h-20 sm:max-h-24 object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-125 pixelated"
                 loading="lazy"
               >
             </div>
 
             <!-- Right Half - Text -->
-            <div class="w-1/2 flex flex-col justify-center py-3 sm:py-4 pl-3 sm:pl-4 pr-10 sm:pr-12">
-              <div class="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-tight">
+            <div class="w-1/2 flex flex-col justify-center py-2 sm:py-3 md:py-4 pl-2 sm:pl-3 md:pl-4 pr-8 sm:pr-10 md:pr-12">
+              <div class="text-xs sm:text-sm md:text-base font-bold text-gray-900 dark:text-white leading-tight">
                 {{ version.name }}
               </div>
             </div>

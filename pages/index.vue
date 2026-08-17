@@ -99,11 +99,11 @@ function navigateToSection(section: typeof navigationSections[0]) {
 </script>
 
 <template>
-  <div class="min-h-[80vh] flex items-center justify-center px-4">
-    <div class="w-full max-w-4xl space-y-12">
+  <div class="min-h-[80vh] flex items-center justify-center px-2 sm:px-4">
+    <div class="w-full max-w-4xl space-y-8 sm:space-y-12">
       <!-- Hero Title -->
-      <div class="text-center space-y-4">
-        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold">
+      <div class="text-center space-y-3 sm:space-y-4">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold">
           <span class="block text-gray-900 dark:text-white">Welcome to</span>
           <span
             class="block bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500 bg-clip-text text-transparent"
@@ -111,7 +111,7 @@ function navigateToSection(section: typeof navigationSections[0]) {
             PokéTCG
           </span>
         </h1>
-        <p class="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400">
+        <p class="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-400 px-2">
           Your ultimate Pokémon companion
         </p>
       </div>
@@ -141,12 +141,12 @@ function navigateToSection(section: typeof navigationSections[0]) {
       </div>
 
       <!-- Navigation Grid -->
-      <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+      <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         <button
           v-for="section in navigationSections"
           :key="section.title"
           type="button"
-          class="group relative overflow-hidden rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white/30 dark:bg-gray-800/30 backdrop-blur-md p-4 sm:p-5 md:p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          class="group relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white/30 dark:bg-gray-800/30 backdrop-blur-md p-3 sm:p-4 md:p-5 lg:p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           :disabled="!section.available"
           @click="navigateToSection(section)"
         >
@@ -157,24 +157,24 @@ function navigateToSection(section: typeof navigationSections[0]) {
           />
 
           <!-- Content -->
-          <div class="relative space-y-3">
+          <div class="relative space-y-2 sm:space-y-3">
             <!-- Icon -->
             <div
-              class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br"
+              class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br"
               :class="section.color"
             >
               <Icon
                 :icon="section.icon"
-                class="w-6 h-6 sm:w-7 sm:h-7 text-white"
+                class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white"
               />
             </div>
 
             <!-- Text -->
             <div>
-              <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+              <h3 class="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                 {{ section.title }}
               </h3>
-              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1">
                 {{ section.description }}
               </p>
 
@@ -191,27 +191,27 @@ function navigateToSection(section: typeof navigationSections[0]) {
       </div>
 
       <!-- Quick Stats -->
-      <div class="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-center pt-8">
+      <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-center pt-4 sm:pt-6 md:pt-8">
         <div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             1025+
           </div>
           <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Pokémon
           </div>
         </div>
-        <div class="w-px h-10 sm:h-12 bg-gray-300 dark:bg-gray-600" />
+        <div class="w-px h-8 sm:h-10 md:h-12 bg-gray-300 dark:bg-gray-600" />
         <div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             9
           </div>
           <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Generations
           </div>
         </div>
-        <div class="w-px h-10 sm:h-12 bg-gray-300 dark:bg-gray-600" />
+        <div class="w-px h-8 sm:h-10 md:h-12 bg-gray-300 dark:bg-gray-600" />
         <div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             18
           </div>
           <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">

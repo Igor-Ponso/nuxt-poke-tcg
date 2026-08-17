@@ -306,8 +306,8 @@ const timeColor = computed(() => {
         class="relative bg-cover bg-center min-h-[600px]"
         :style="{ backgroundImage: backgroundImageUrl }"
       >
-        <!-- Overlay for better readability -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 pointer-events-none" />
+        <!-- Overlay for better readability - lighter on desktop to show background animation -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/40 md:from-black/20 md:via-black/5 md:to-black/30 pointer-events-none" />
 
         <!-- Content Container -->
         <div class="relative z-10 p-8 space-y-8">

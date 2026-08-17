@@ -225,7 +225,7 @@ async function handleGenerationChange(genId: number) {
     <!-- Pokemon Grid -->
     <div
       v-if="pokemonStore.loading && pokemonStore.pokemons.length === 0"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
     >
       <div
         v-for="n in 8"
@@ -244,7 +244,7 @@ async function handleGenerationChange(genId: number) {
       <!-- Virtual Grid Container -->
       <div v-bind="wrapperProps">
         <div v-bind="contentProps">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             <template
               v-for="item in virtualItems"
               :key="`pokemon-${item.data.id}`"

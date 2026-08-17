@@ -50,7 +50,6 @@ const generations: Generation[] = [
   { id: 9, name: 'Paldea', range: [906, 1025], region: 'Paldea', starters: [906, 909, 912], color: 'from-pink-500 to-rose-500' },
 ]
 
-
 /**
  * Get starter image URL
  */
@@ -90,10 +89,10 @@ function toggleExpanded() {
       />
     </button>
 
-    <!-- Generation Grid - 3x3 layout (Collapsible) -->
+    <!-- Generation Grid - Responsive layout (Collapsible) -->
     <div
       v-if="isExpanded"
-      class="grid grid-cols-3 gap-4 sm:gap-6"
+      class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
     >
       <!-- Generation Buttons -->
       <button
@@ -113,25 +112,25 @@ function toggleExpanded() {
         />
 
         <!-- Content -->
-        <div class="relative p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+        <div class="relative p-3 sm:p-4 flex items-center gap-2 sm:gap-3 md:gap-4">
           <!-- Starters - Left Side (Horizontal) -->
-          <div class="flex items-center justify-center gap-1 sm:gap-2">
+          <div class="flex items-center justify-center gap-0.5 sm:gap-1 md:gap-2">
             <img
               v-for="starterId in gen.starters"
               :key="starterId"
               :src="getStarterImageUrl(starterId)"
               :alt="`Starter ${starterId}`"
-              class="w-10 h-10 sm:w-14 sm:h-14 object-contain drop-shadow-xl transition-transform duration-200 group-hover:scale-110"
+              class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain drop-shadow-xl transition-transform duration-200 group-hover:scale-110"
               loading="lazy"
             >
           </div>
 
           <!-- Text - Right Side -->
-          <div class="flex-1 text-left">
+          <div class="flex-1 text-left min-w-0">
             <div class="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400">
               Gen {{ gen.id }}
             </div>
-            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+            <div class="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white truncate">
               {{ gen.region }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-500">

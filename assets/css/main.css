@@ -200,8 +200,31 @@
     }
   }
 
+  /* Desktop version with more pronounced movement */
+  @keyframes blob-desktop {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(80px, -120px) scale(1.15);
+    }
+    66% {
+      transform: translate(-60px, 80px) scale(0.85);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
   .animate-blob {
     animation: blob 7s infinite;
+  }
+
+  /* Use desktop animation on larger screens */
+  @media (min-width: 768px) {
+    .animate-blob {
+      animation: blob-desktop 7s infinite;
+    }
   }
 
   .animation-delay-2000 {

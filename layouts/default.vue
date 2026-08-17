@@ -50,11 +50,11 @@ const mainClass = computed(() => {
     <!-- Animated Background (Client-only to prevent hydration mismatch) -->
     <ClientOnly>
       <div class="fixed inset-0 z-0 pointer-events-none">
-        <!-- Animated gradient orbs -->
-        <div class="absolute top-0 -left-40 w-80 h-80 bg-purple-400 dark:bg-purple-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob" />
-        <div class="absolute top-0 -right-40 w-80 h-80 bg-yellow-400 dark:bg-yellow-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-        <div class="absolute -bottom-40 left-20 w-80 h-80 bg-pink-400 dark:bg-pink-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
-        <div class="absolute bottom-0 right-20 w-80 h-80 bg-blue-400 dark:bg-blue-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-6000" />
+        <!-- Animated gradient orbs - increased visibility on desktop -->
+        <div class="absolute top-0 -left-40 w-80 h-80 md:w-[500px] md:h-[500px] bg-purple-400 dark:bg-purple-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 md:opacity-40 animate-blob" />
+        <div class="absolute top-0 -right-40 w-80 h-80 md:w-[500px] md:h-[500px] bg-yellow-400 dark:bg-yellow-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 md:opacity-40 animate-blob animation-delay-2000" />
+        <div class="absolute -bottom-40 left-20 w-80 h-80 md:w-[500px] md:h-[500px] bg-pink-400 dark:bg-pink-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 md:opacity-40 animate-blob animation-delay-4000" />
+        <div class="absolute bottom-0 right-20 w-80 h-80 md:w-[500px] md:h-[500px] bg-blue-400 dark:bg-blue-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 md:opacity-40 animate-blob animation-delay-6000" />
 
         <!-- Subtle pattern overlay -->
         <div
@@ -71,7 +71,7 @@ const mainClass = computed(() => {
 
       <!-- Main content area -->
       <main :class="mainClass">
-        <div class="container mx-auto px-4 py-6 max-w-7xl">
+        <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
           <!-- Page content -->
           <slot />
         </div>

@@ -166,6 +166,7 @@ const cardClass = computed(() => {
     'transition-shadow',
     'duration-200',
     'w-full',
+    'mx-auto', // Center cards horizontally
     // Performance optimizations
     'will-change-auto', // Only use will-change when hovering
     '[contain:layout_style_paint]', // CSS containment for better performance
