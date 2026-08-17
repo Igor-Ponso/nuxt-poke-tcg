@@ -1195,9 +1195,11 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // Ambas as APIs são públicas e com CORS liberado — chamadas direto do browser,
+    // sem chave e sem proxy no servidor (requisito para rodar estático no GitHub Pages).
     public: {
-      pokemonTcgApiKey: process.env.POKEMON_TCG_API_KEY || '',
-      pokeApiUrl: 'https://pokeapi.co/api/v2'
+      pokeApiUrl: 'https://pokeapi.co/api/v2',
+      pokemonTcgApiUrl: 'https://api.pokemontcg.io/v2'
     }
   }
 })
