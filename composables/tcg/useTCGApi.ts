@@ -14,9 +14,13 @@ import type {
   SimplifiedTCGCard,
 } from '~/types'
 
+// api.pokemontcg.io sends `Access-Control-Allow-Origin: *`, so the browser can call it
+// directly — no server proxy, which is what lets this work as a static build on GitHub Pages.
+// It does 5xx fairly often, hence the retry (ofetch already retries 408/409/425/429/5xx).
+const FETCH_OPTS = { retry: 3, retryDelay: 800 } as const
+
 export function useTCGApi() {
-  // Use local proxy API to avoid CORS issues
-  const baseUrl = '/api/tcg'
+  const baseUrl = useRuntimeConfig().public.pokemonTcgApiUrl
 
   /**
    * Fetches a single card by ID
@@ -33,7 +37,7 @@ export function useTCGApi() {
     }
 
     const url = `${baseUrl}/cards/${id}`
-    const response = await $fetch<{ data: TCGCard }>(url)
+    const response = await $fetch<{ data: TCGCard }>(url, FETCH_OPTS)
 
     cache.set(response.data)
     return response.data
@@ -46,7 +50,7 @@ export function useTCGApi() {
     const queryParams = buildQueryParams(params)
     const url = `${baseUrl}/cards?${queryParams}`
 
-    return await $fetch<TCGCardsResponse>(url)
+    return await $fetch<TCGCardsResponse>(url, FETCH_OPTS)
   }
 
   /**
@@ -75,7 +79,7 @@ export function useTCGApi() {
     }
 
     const url = `${baseUrl}/sets`
-    const response = await $fetch<TCGSetsResponse>(url)
+    const response = await $fetch<TCGSetsResponse>(url, FETCH_OPTS)
 
     cache.set(response.data)
     return response.data
@@ -96,7 +100,7 @@ export function useTCGApi() {
     }
 
     const url = `${baseUrl}/sets/${id}`
-    const response = await $fetch<{ data: TCGSet }>(url)
+    const response = await $fetch<{ data: TCGSet }>(url, FETCH_OPTS)
 
     cache.set(response.data)
     return response.data
@@ -215,7 +219,11 @@ export function useTCGApi() {
 // QUERY BUILDER
 // ============================================================================
 
-function buildQueryParams(params: TCGCardQueryParams): string {
+const DEFAULT_ORDER_BY = 'nationalPokedexNumbers,set.releaseDate,number'
+const SET_ORDER_BY = 'number' // the API sorts this numerically, so 2 comes before 10
+const POKEDEX_RANGE = '1 TO 1025' // ponytail: bump when a new generation lands
+
+export function buildQueryParams(params: TCGCardQueryParams): string {
   const queryParts: string[] = []
 
   // Build q parameter (advanced search)
@@ -234,8 +242,19 @@ function buildQueryParams(params: TCGCardQueryParams): string {
   if (params.set && typeof params.set === 'string' && params.set.trim()) {
     qParts.push(`set.id:${params.set}`)
   }
+  if (params.supertype && typeof params.supertype === 'string' && params.supertype.trim()) {
+    qParts.push(`supertype:"${params.supertype}"`)
+  }
   if (params.nationalPokedexNumbers) {
     qParts.push(`nationalPokedexNumbers:${params.nationalPokedexNumbers}`)
+  }
+
+  // Free browsing has no anchor, so it follows the Pokédex instead of the API's arbitrary
+  // default order. Trainer/Energy cards have no pokédex number and would sort ahead of #1,
+  // so they are excluded — unless something narrower is already asking for them.
+  const insideSet = Boolean(params.set)
+  if (!insideSet && !params.name && !params.supertype && !params.nationalPokedexNumbers) {
+    qParts.push(`nationalPokedexNumbers:[${POKEDEX_RANGE}]`)
   }
 
   if (qParts.length > 0) {
@@ -250,10 +269,10 @@ function buildQueryParams(params: TCGCardQueryParams): string {
     queryParts.push(`pageSize=${params.pageSize}`)
   }
 
-  // Add ordering
-  if (params.orderBy) {
-    queryParts.push(`orderBy=${params.orderBy}`)
-  }
+  // Inside a set, read it like a binder: printed order, every card exactly once. Otherwise
+  // Pokédex number first, then oldest print first, so pages stay stable across requests.
+  const orderBy = params.orderBy || (insideSet ? SET_ORDER_BY : DEFAULT_ORDER_BY)
+  queryParts.push(`orderBy=${encodeURIComponent(orderBy)}`)
 
   return queryParts.join('&')
 }

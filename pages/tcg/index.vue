@@ -6,7 +6,8 @@
  */
 
 import { Icon } from '@iconify/vue'
-import type { SimplifiedTCGCard, TCGRarity } from '~/types'
+import type { SimplifiedTCGCard } from '~/types'
+import type { TCGCardFilters } from '~/stores/tcg'
 
 useHead({
   title: 'TCG Gallery - PokéTCG',
@@ -17,7 +18,6 @@ const tcgStore = useTCGStore()
 const searchQuery = ref('')
 const isSearching = ref(false)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
-const currentFilters = ref<{ rarity?: TCGRarity, set?: string }>({})
 const selectedCard = ref<SimplifiedTCGCard | null>(null)
 const showCardModal = ref(false)
 
@@ -29,7 +29,7 @@ const {
   virtualItems,
   wrapperProps,
   contentProps,
-} = useVirtualGrid(computed(() => tcgStore.filteredCards), {
+} = useVirtualGrid(computed(() => tcgStore.cards), {
   itemHeight: 420, // Estimated TCG card height (taller than Pokemon cards)
   gap: 24, // gap-6 in Tailwind = 24px
   overscan: 2,
@@ -43,24 +43,34 @@ const {
   debug: false,
 })
 
+/**
+ * A name search looks across every collection — pinning it to the open set would
+ * hide the very cards someone is searching for.
+ */
 async function handleSearch() {
   isSearching.value = true
-  await tcgStore.searchCards({
-    name: searchQuery.value || undefined,
-    pageSize: 20,
-    ...currentFilters.value,
-  })
+  const name = searchQuery.value.trim()
+  await tcgStore.searchCards(
+    name
+      ? { name, rarity: tcgStore.filters.rarity, supertype: tcgStore.filters.supertype }
+      : { ...tcgStore.filters, name: undefined },
+  )
   isSearching.value = false
 }
 
-function handleFilter(filters: { rarity?: TCGRarity, set?: string }) {
-  currentFilters.value = filters
-  handleSearch()
+function handleFilter(filters: TCGCardFilters) {
+  searchQuery.value = ''
+  tcgStore.searchCards(filters)
+}
+
+function handleReset() {
+  searchQuery.value = ''
+  tcgStore.resetFilters()
 }
 
 function clearSearch() {
   searchQuery.value = ''
-  tcgStore.searchCards({ pageSize: 20 })
+  handleSearch()
 }
 
 function handleCardClick(card: SimplifiedTCGCard) {
@@ -75,28 +85,14 @@ function closeModal() {
   }, 300)
 }
 
-async function loadMore() {
-  if (tcgStore.loading || !tcgStore.hasMore) return
-
-  await tcgStore.searchCards({
-    name: searchQuery.value || undefined,
-    page: tcgStore.currentPage + 1,
-    pageSize: 20,
-  })
-}
-
 onMounted(async () => {
   await tcgStore.initialize()
-  if (tcgStore.cards.length === 0) {
-    // Load initial cards
-    await tcgStore.searchCards({ pageSize: 20 })
-  }
 
   // Infinite scroll observer
   const observer = new IntersectionObserver((entries) => {
     const first = entries[0]
-    if (first?.isIntersecting && tcgStore.hasMore && !tcgStore.loading) {
-      loadMore()
+    if (first?.isIntersecting) {
+      tcgStore.loadMore()
     }
   }, { threshold: 0.5 })
 
@@ -113,12 +109,29 @@ onMounted(async () => {
     <!-- Page Header -->
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <div>
+        <div class="min-w-0">
           <h1 class="text-4xl font-bold text-gray-900 dark:text-white">
             TCG Gallery
           </h1>
           <p class="text-gray-600 dark:text-gray-400 mt-2">
-            Explore Pokemon Trading Card Game collection
+            <!-- currentSet resolves only once the set list lands, so key the branch on
+                 the filter itself to avoid flashing the wrong caption on first paint -->
+            <template v-if="tcgStore.filters.set">
+              <span class="font-semibold text-gray-900 dark:text-white">
+                {{ tcgStore.currentSet?.name || 'Coleção' }}
+              </span>
+              <template v-if="tcgStore.currentSet">
+                · {{ tcgStore.currentSet.series }}
+                · {{ tcgStore.currentSet.releaseDate.slice(0, 4) }}
+              </template>
+              · {{ tcgStore.totalCount }} cartas
+            </template>
+            <template v-else-if="tcgStore.filters.name">
+              {{ tcgStore.totalCount }} cartas encontradas
+            </template>
+            <template v-else>
+              Todas as coleções, em ordem da Pokédex
+            </template>
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -156,7 +169,11 @@ onMounted(async () => {
             @click="clearSearch"
           />
         </div>
-        <TCGFilters @filter="handleFilter" />
+        <TCGFilters
+          :filters="tcgStore.filters"
+          @apply="handleFilter"
+          @reset="handleReset"
+        />
         <button
           type="button"
           class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -213,14 +230,14 @@ onMounted(async () => {
       class="text-center py-20"
     >
       <p class="text-xl text-gray-600 dark:text-gray-400">
-        No cards found
+        {{ tcgStore.error || 'Nenhuma carta encontrada com esses filtros' }}
       </p>
       <UiButton
         variant="primary"
         class="mt-4"
-        @click="tcgStore.searchCards({ pageSize: 20 })"
+        @click="handleReset"
       >
-        Load Cards
+        Voltar para o Base Set
       </UiButton>
     </div>
 

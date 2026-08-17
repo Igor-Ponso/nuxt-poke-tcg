@@ -5,7 +5,20 @@
  */
 
 import { defineStore } from 'pinia'
-import type { TCGCard, TCGSet, SimplifiedTCGCard, TCGRarity } from '~/types'
+import type { TCGCard, TCGSet, SimplifiedTCGCard, TCGRarity, TCGSupertype } from '~/types'
+
+/** Everything that narrows a card query. The API does the filtering, not the client. */
+export interface TCGCardFilters {
+  name?: string
+  rarity?: TCGRarity
+  set?: string
+  supertype?: TCGSupertype
+}
+
+/** The gallery opens here: 102 cards, one per Pokémon, and the Charizard everyone knows. */
+export const DEFAULT_SET_ID = 'base1'
+
+const PAGE_SIZE = 20
 
 interface TCGState {
   // Cards
@@ -17,12 +30,9 @@ interface TCGState {
 
   // Sets
   sets: TCGSet[]
-  selectedSet: TCGSet | null
 
-  // Filters
-  selectedRarity: string | null
-  selectedSetId: string | null
-  searchQuery: string
+  // Active query — mirrors what was last sent to the API
+  filters: TCGCardFilters
 
   // UI State
   loading: boolean
@@ -43,11 +53,8 @@ export const useTCGStore = defineStore('tcg', {
     hasMore: true,
 
     sets: [],
-    selectedSet: null,
 
-    selectedRarity: null,
-    selectedSetId: null,
-    searchQuery: '',
+    filters: { set: DEFAULT_SET_ID },
 
     loading: false,
     error: null,
@@ -59,41 +66,6 @@ export const useTCGStore = defineStore('tcg', {
 
   getters: {
     /**
-     * Filtered cards based on current filters
-     */
-    filteredCards(state): SimplifiedTCGCard[] {
-      let filtered = state.cards
-
-      // Filter by rarity
-      if (state.selectedRarity) {
-        filtered = filtered.filter(c => c.rarity === state.selectedRarity)
-      }
-
-      // Filter by set
-      if (state.selectedSetId) {
-        filtered = filtered.filter(c => c.setName === state.selectedSetId)
-      }
-
-      // Filter by search
-      if (state.searchQuery) {
-        filtered = filtered.filter(c => matchesSearch(c.name, state.searchQuery))
-      }
-
-      return filtered
-    },
-
-    /**
-     * Check if filters are active
-     */
-    hasActiveFilters(state): boolean {
-      return !!(
-        state.selectedRarity
-        || state.selectedSetId
-        || state.searchQuery
-      )
-    },
-
-    /**
      * Get card count
      */
     cardCount(state): number {
@@ -101,17 +73,40 @@ export const useTCGStore = defineStore('tcg', {
     },
 
     /**
-     * Get sets grouped by series
+     * Sets grouped by series, newest series first and newest set first within each.
+     * Feeds the Series → Collection pickers in TCGFilters.
      */
     setsBySeries(state): Record<string, TCGSet[]> {
-      return state.sets.reduce((acc, set) => {
+      const grouped = state.sets.reduce((acc, set) => {
         const series = set.series || 'Other'
-        if (!acc[series]) {
-          acc[series] = []
-        }
-        acc[series].push(set)
+        ;(acc[series] ||= []).push(set)
         return acc
       }, {} as Record<string, TCGSet[]>)
+
+      for (const sets of Object.values(grouped)) {
+        sets.sort((a, b) => b.releaseDate.localeCompare(a.releaseDate))
+      }
+
+      // Object key order drives the <optgroup> order in the picker
+      return Object.fromEntries(
+        Object.entries(grouped).sort(
+          ([, a], [, b]) => (b[0]?.releaseDate || '').localeCompare(a[0]?.releaseDate || ''),
+        ),
+      )
+    },
+
+    /**
+     * The set currently being browsed, if any
+     */
+    currentSet(state): TCGSet | null {
+      return state.sets.find(s => s.id === state.filters.set) || null
+    },
+
+    /**
+     * How many filters beyond the free-text search are narrowing the view
+     */
+    activeFilterCount(state): number {
+      return [state.filters.rarity, state.filters.set, state.filters.supertype].filter(Boolean).length
     },
   },
 
@@ -120,121 +115,35 @@ export const useTCGStore = defineStore('tcg', {
      * Fetches all TCG sets
      */
     async fetchSets() {
-      this.loading = true
-      this.error = null
-
+      // Deliberately does not touch `loading`: that flag drives the card grid, and this
+      // runs in parallel with the first card query. A failed set list only costs the
+      // pickers their options, so it must not blank the gallery either.
       try {
         const api = useTCGApi()
         this.sets = await api.fetchSets()
       }
       catch (error) {
-        this.error = error instanceof Error ? error.message : 'Failed to fetch sets'
         console.error('Error fetching sets:', error)
       }
-      finally {
-        this.loading = false
-      }
     },
 
     /**
-     * Fetches cards by Pokemon name
+     * Runs a card query. Page 1 replaces the grid, later pages append to it.
+     *
+     * The API does all the filtering and ordering — results are never filtered again
+     * client-side, which is what used to strand the grid on a stale search term.
      */
-    async fetchCardsByPokemon(pokemonName: string, page = 1) {
+    async searchCards(filters?: TCGCardFilters, page = 1) {
+      this.filters = { ...(filters ?? this.filters) }
       this.loading = true
       this.error = null
 
       try {
         const api = useTCGApi()
-        const response = await api.fetchCardsByPokemon(pokemonName, page, 20)
-
+        const response = await api.searchCards({ ...this.filters, page, pageSize: PAGE_SIZE })
         const simplified = response.data.map(card => api.simplifyTCGCard(card))
 
-        // Append or replace based on page
-        if (page === 1) {
-          this.cards = simplified
-        }
-        else {
-          this.cards.push(...simplified)
-        }
-
-        this.currentPage = page
-        this.totalCount = response.totalCount || 0
-        this.hasMore = this.cards.length < this.totalCount
-      }
-      catch (error) {
-        this.error = error instanceof Error ? error.message : 'Failed to fetch cards'
-        console.error('Error fetching cards:', error)
-      }
-      finally {
-        this.loading = false
-      }
-    },
-
-    /**
-     * Fetches cards by set
-     */
-    async fetchCardsBySet(setId: string, page = 1) {
-      this.loading = true
-      this.error = null
-      this.selectedSetId = setId
-
-      try {
-        const api = useTCGApi()
-        const response = await api.fetchCardsBySet(setId, page, 20)
-
-        const simplified = response.data.map(card => api.simplifyTCGCard(card))
-
-        if (page === 1) {
-          this.cards = simplified
-        }
-        else {
-          this.cards.push(...simplified)
-        }
-
-        this.currentPage = page
-        this.totalCount = response.totalCount || 0
-        this.hasMore = this.cards.length < this.totalCount
-      }
-      catch (error) {
-        this.error = error instanceof Error ? error.message : 'Failed to fetch cards'
-        console.error('Error fetching cards:', error)
-      }
-      finally {
-        this.loading = false
-      }
-    },
-
-    /**
-     * Searches cards
-     */
-    async searchCards(params: { name?: string, page?: number, pageSize?: number, rarity?: TCGRarity, set?: string } = {}) {
-      const { name, page = 1, pageSize = 20, rarity, set } = params
-
-      if (name) {
-        this.searchQuery = name
-      }
-      this.loading = true
-      this.error = null
-
-      try {
-        const api = useTCGApi()
-        const response = await api.searchCards({
-          name,
-          page,
-          pageSize,
-          rarity,
-          set,
-        })
-
-        const simplified = response.data.map(card => api.simplifyTCGCard(card))
-
-        if (page === 1) {
-          this.cards = simplified
-        }
-        else {
-          this.cards.push(...simplified)
-        }
-
+        this.cards = page === 1 ? simplified : [...this.cards, ...simplified]
         this.currentPage = page
         this.totalCount = response.totalCount || 0
         this.hasMore = this.cards.length < this.totalCount
@@ -246,6 +155,14 @@ export const useTCGStore = defineStore('tcg', {
       finally {
         this.loading = false
       }
+    },
+
+    /**
+     * Loads the next page of the current query
+     */
+    async loadMore() {
+      if (this.loading || !this.hasMore) return
+      await this.searchCards(this.filters, this.currentPage + 1)
     },
 
     /**
@@ -335,26 +252,10 @@ export const useTCGStore = defineStore('tcg', {
     },
 
     /**
-     * Sets rarity filter
+     * Drops every filter and goes back to the default collection
      */
-    setRarityFilter(rarity: string | null) {
-      this.selectedRarity = rarity
-    },
-
-    /**
-     * Sets set filter
-     */
-    setSetFilter(setId: string | null) {
-      this.selectedSetId = setId
-    },
-
-    /**
-     * Clears all filters
-     */
-    clearFilters() {
-      this.selectedRarity = null
-      this.selectedSetId = null
-      this.searchQuery = ''
+    resetFilters() {
+      return this.searchCards({ set: DEFAULT_SET_ID })
     },
 
     /**
@@ -385,15 +286,16 @@ export const useTCGStore = defineStore('tcg', {
     },
 
     /**
-     * Initialize store
+     * Initialize store: preferences, the set list that feeds the pickers, and the
+     * opening collection. Sets and cards are independent, so they load together.
      */
     async initialize() {
       this.loadPreferences()
 
-      // Load sets if not loaded
-      if (this.sets.length === 0) {
-        await this.fetchSets()
-      }
+      await Promise.all([
+        this.sets.length === 0 ? this.fetchSets() : Promise.resolve(),
+        this.cards.length === 0 ? this.searchCards() : Promise.resolve(),
+      ])
     },
   },
 })
