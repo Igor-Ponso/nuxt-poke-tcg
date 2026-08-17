@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+// GitHub Pages serves the project site under /<repo>/, so assets need the prefix in production.
+const baseURL = process.env.NODE_ENV === 'production' ? '/nuxt-poke-tcg/' : '/'
+
 export default defineNuxtConfig({
-  // Configure for GitHub Pages deployment
 
   modules: [
     '@nuxtjs/tailwindcss',
@@ -29,7 +32,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   app: {
-    baseURL: process.env.NODE_ENV === 'production' ? '/nuxt-poke-tcg/' : '/',
+    baseURL,
     head: {
       title: 'Nuxt Poké TCG',
       htmlAttrs: {
@@ -45,7 +48,7 @@ export default defineNuxtConfig({
         { name: 'format-detection', content: 'telephone=no' },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/x-icon', href: `${baseURL}favicon.ico` },
       ],
     },
   },
@@ -53,8 +56,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
+    // Both APIs are public and CORS-enabled — called straight from the browser, no key.
     public: {
-      pokemonTcgApiKey: process.env.POKEMON_TCG_API_KEY || '',
       pokeApiUrl: 'https://pokeapi.co/api/v2',
       pokemonTcgApiUrl: 'https://api.pokemontcg.io/v2',
     },
